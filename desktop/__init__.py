@@ -1,0 +1,1 @@
+"""Savanty Desktop Application"""

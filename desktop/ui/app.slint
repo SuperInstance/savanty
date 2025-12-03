@@ -1,0 +1,617 @@
+import { Button, TextEdit, ScrollView, VerticalBox, HorizontalBox, TabWidget, Spinner, ComboBox, GridBox } from "std-widgets.slint";
+
+export struct Example {
+    name: string,
+    category: string,
+    description: string,
+}
+
+export component AppWindow inherits Window {
+    title: "Savanty - AI Planning Agent";
+    min-width: 900px;
+    min-height: 700px;
+    background: #f8fafc;
+
+    // Properties bound to Python
+    in-out property <string> problem-text: "";
+    in-out property <string> solution-text: "";
+    in-out property <string> asp-code: "";
+    in-out property <string> visualization-html: "";
+    in-out property <[string]> questions: [];
+    in-out property <string> error-message: "";
+    in-out property <bool> is-loading: false;
+    in-out property <bool> needs-info: false;
+    in-out property <bool> has-solution: false;
+    in-out property <bool> not-suitable: false;
+    in-out property <string> suggested-tool: "";
+    in-out property <string> suitability-reason: "";
+    in-out property <string> additional-info: "";
+    in-out property <[Example]> examples: [];
+    in-out property <int> selected-tab: 0;
+
+    // Internal property for TextEdit (workaround for Slint binding issue)
+    property <string> internal-problem-text: problem-text;
+
+    // Callbacks to Python
+    callback solve();
+    callback reset();
+    callback submit-info(string);
+    callback select-example(int);
+
+    // Function to force text update
+    public function set-problem-text(text: string) {
+        problem-text = text;
+        internal-problem-text = text;
+    }
+
+    VerticalBox {
+        padding: 0px;
+        spacing: 0px;
+
+        // Header
+        Rectangle {
+            height: 60px;
+            background: white;
+            border-width: 0px;
+
+            HorizontalBox {
+                padding-left: 24px;
+                padding-right: 24px;
+                alignment: space-between;
+
+                HorizontalBox {
+                    spacing: 12px;
+                    alignment: start;
+
+                    Rectangle {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 8px;
+                        background: #2563eb;
+
+                        Text {
+                            text: "S";
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: white;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    VerticalBox {
+                        alignment: center;
+                        spacing: 2px;
+
+                        Text {
+                            text: "Savanty";
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #111827;
+                        }
+                        Text {
+                            text: "Optimization for Everyone";
+                            font-size: 11px;
+                            color: #6b7280;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Divider
+        Rectangle {
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        // Main content
+        HorizontalBox {
+            padding: 24px;
+            spacing: 24px;
+
+            // Left Panel - Input
+            Rectangle {
+                background: white;
+                border-radius: 12px;
+                drop-shadow-blur: 8px;
+                drop-shadow-color: #0000001a;
+                min-width: 400px;
+
+                VerticalBox {
+                    padding: 20px;
+                    spacing: 16px;
+
+                    Text {
+                        text: "What do you need to plan?";
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #1f2937;
+                    }
+
+                    Text {
+                        text: "Just describe your problem in plain English. No coding, no special syntax—optimization power for everyone.";
+                        font-size: 13px;
+                        color: #6b7280;
+                        wrap: word-wrap;
+                    }
+
+                    Rectangle {
+                        border-radius: 8px;
+                        border-width: 1px;
+                        border-color: #d1d5db;
+                        min-height: 200px;
+
+                        TextEdit {
+                            x: 8px;
+                            y: 8px;
+                            width: parent.width - 16px;
+                            height: parent.height - 16px;
+                            text: internal-problem-text;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                            edited(new-text) => {
+                                problem-text = new-text;
+                                internal-problem-text = new-text;
+                            }
+                        }
+                    }
+
+                    // Example selector
+                    Text {
+                        text: "Try an example:";
+                        font-size: 13px;
+                        font-weight: 500;
+                        color: #374151;
+                    }
+
+                    GridBox {
+                        spacing: 8px;
+
+                        Row {
+                            example-btn := Button {
+                                text: "Shift Schedule";
+                                clicked => { select-example(0); }
+                            }
+                            Button {
+                                text: "Course Timetable";
+                                clicked => { select-example(1); }
+                            }
+                            Button {
+                                text: "Meal Planning";
+                                clicked => { select-example(2); }
+                            }
+                        }
+                        Row {
+                            Button {
+                                text: "Seating Chart";
+                                clicked => { select-example(3); }
+                            }
+                            Button {
+                                text: "Conference";
+                                clicked => { select-example(4); }
+                            }
+                            Button {
+                                text: "Team Formation";
+                                clicked => { select-example(5); }
+                            }
+                        }
+                    }
+
+                    // Action buttons
+                    HorizontalBox {
+                        spacing: 12px;
+
+                        Button {
+                            text: is-loading ? "Working..." : "Plan This";
+                            enabled: !is-loading && problem-text != "";
+                            primary: true;
+                            clicked => { solve(); }
+                        }
+
+                        Button {
+                            text: "Reset";
+                            visible: has-solution || needs-info || error-message != "" || not-suitable;
+                            clicked => { reset(); }
+                        }
+                    }
+                }
+            }
+
+            // Right Panel - Output
+            Rectangle {
+                background: white;
+                border-radius: 12px;
+                drop-shadow-blur: 8px;
+                drop-shadow-color: #0000001a;
+                horizontal-stretch: 1;
+
+                VerticalBox {
+                    padding: 20px;
+                    spacing: 16px;
+
+                    // Loading state
+                    if is-loading: VerticalBox {
+                        alignment: center;
+                        spacing: 16px;
+
+                        Spinner {
+                            indeterminate: true;
+                        }
+                        Text {
+                            text: "Thinking...";
+                            font-size: 14px;
+                            color: #6b7280;
+                            horizontal-alignment: center;
+                        }
+                    }
+
+                    // Error state
+                    if error-message != "" && !is-loading && !not-suitable: Rectangle {
+                        background: #fef2f2;
+                        border-radius: 8px;
+                        border-width: 1px;
+                        border-color: #fecaca;
+
+                        VerticalBox {
+                            padding: 16px;
+
+                            Text {
+                                text: "Error";
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #dc2626;
+                            }
+                            Text {
+                                text: error-message;
+                                font-size: 13px;
+                                color: #b91c1c;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+
+                    // Not suitable state
+                    if not-suitable && !is-loading: VerticalBox {
+                        spacing: 16px;
+
+                        // Header with icon
+                        HorizontalBox {
+                            spacing: 12px;
+
+                            Rectangle {
+                                width: 48px;
+                                height: 48px;
+                                border-radius: 24px;
+                                background: #fef3c7;
+
+                                Text {
+                                    text: "ℹ";
+                                    font-size: 24px;
+                                    color: #d97706;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+
+                            VerticalBox {
+                                alignment: center;
+
+                                Text {
+                                    text: "Different Tool Recommended";
+                                    font-size: 16px;
+                                    font-weight: 600;
+                                    color: #111827;
+                                }
+                                Text {
+                                    text: suitability-reason;
+                                    font-size: 13px;
+                                    color: #6b7280;
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+
+                        // Suggested tool
+                        if suggested-tool != "": Rectangle {
+                            background: #eff6ff;
+                            border-radius: 8px;
+
+                            VerticalBox {
+                                padding: 16px;
+                                spacing: 8px;
+
+                                Text {
+                                    text: "Suggested Alternative";
+                                    font-size: 14px;
+                                    font-weight: 500;
+                                    color: #1e40af;
+                                }
+                                Text {
+                                    text: suggested-tool;
+                                    font-size: 13px;
+                                    font-family: "monospace";
+                                    color: #1e3a8a;
+                                }
+                            }
+                        }
+
+                        // What Savanty is good at
+                        Rectangle {
+                            background: #f9fafb;
+                            border-radius: 8px;
+
+                            VerticalBox {
+                                padding: 16px;
+                                spacing: 12px;
+
+                                Text {
+                                    text: "Try Savanty for problems needing guaranteed correct solutions:";
+                                    font-size: 14px;
+                                    font-weight: 500;
+                                    color: #111827;
+                                }
+
+                                Text {
+                                    text: "✓ Staff scheduling - shifts, availability, labor rules";
+                                    font-size: 13px;
+                                    color: #374151;
+                                }
+                                Text {
+                                    text: "✓ Route planning - deliveries, time windows, capacity";
+                                    font-size: 13px;
+                                    color: #374151;
+                                }
+                                Text {
+                                    text: "✓ Event planning - seating, room booking, appointments";
+                                    font-size: 13px;
+                                    color: #374151;
+                                }
+                                Text {
+                                    text: "✓ Resource allocation - teams, equipment, budgets";
+                                    font-size: 13px;
+                                    color: #374151;
+                                }
+                            }
+                        }
+                    }
+
+                    // Questions state
+                    if needs-info && !is-loading: Rectangle {
+                        background: white;
+
+                        VerticalBox {
+                            spacing: 16px;
+
+                            HorizontalBox {
+                                spacing: 12px;
+
+                                Rectangle {
+                                    width: 40px;
+                                    height: 40px;
+                                    border-radius: 20px;
+                                    background: #dbeafe;
+
+                                    Text {
+                                        text: "?";
+                                        font-size: 20px;
+                                        font-weight: 600;
+                                        color: #2563eb;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                    }
+                                }
+
+                                VerticalBox {
+                                    alignment: center;
+
+                                    Text {
+                                        text: "I need more information";
+                                        font-size: 15px;
+                                        font-weight: 600;
+                                        color: #111827;
+                                    }
+                                    Text {
+                                        text: "Please answer the following:";
+                                        font-size: 13px;
+                                        color: #6b7280;
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                background: #f9fafb;
+                                border-radius: 8px;
+
+                                VerticalBox {
+                                    padding: 12px;
+
+                                    for question[idx] in questions: Text {
+                                        text: "\{idx + 1}. \{question}";
+                                        font-size: 13px;
+                                        color: #374151;
+                                        wrap: word-wrap;
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: "Your response:";
+                                font-size: 13px;
+                                font-weight: 500;
+                                color: #374151;
+                            }
+
+                            Rectangle {
+                                border-radius: 8px;
+                                border-width: 1px;
+                                border-color: #d1d5db;
+                                min-height: 100px;
+
+                                TextEdit {
+                                    x: 8px;
+                                    y: 8px;
+                                    width: parent.width - 16px;
+                                    height: parent.height - 16px;
+                                    text <=> additional-info;
+                                    font-size: 13px;
+                                    wrap: word-wrap;
+                                }
+                            }
+
+                            Button {
+                                text: "Submit & Continue";
+                                primary: true;
+                                enabled: additional-info != "";
+                                clicked => { submit-info(additional-info); }
+                            }
+                        }
+                    }
+
+                    // Solution state
+                    if has-solution && !is-loading: VerticalBox {
+                        spacing: 12px;
+
+                        // Success header
+                        Rectangle {
+                            background: #f0fdf4;
+                            border-radius: 8px;
+                            height: 48px;
+
+                            HorizontalBox {
+                                padding: 12px;
+                                spacing: 8px;
+
+                                Text {
+                                    text: "✓";
+                                    font-size: 16px;
+                                    color: #16a34a;
+                                    vertical-alignment: center;
+                                }
+                                Text {
+                                    text: "Here's what I came up with";
+                                    font-size: 14px;
+                                    font-weight: 500;
+                                    color: #166534;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
+                        // Tabs
+                        HorizontalBox {
+                            spacing: 4px;
+
+                            tab-solution := Rectangle {
+                                height: 36px;
+                                border-radius: 6px;
+                                background: selected-tab == 0 ? #2563eb : transparent;
+
+                                Text {
+                                    text: "Solution";
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    color: selected-tab == 0 ? white : #6b7280;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                TouchArea {
+                                    clicked => { selected-tab = 0; }
+                                }
+                            }
+
+                            tab-asp := Rectangle {
+                                height: 36px;
+                                border-radius: 6px;
+                                background: selected-tab == 1 ? #2563eb : transparent;
+
+                                Text {
+                                    text: "ASP Code";
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    color: selected-tab == 1 ? white : #6b7280;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+
+                                TouchArea {
+                                    clicked => { selected-tab = 1; }
+                                }
+                            }
+                        }
+
+                        // Tab content
+                        Rectangle {
+                            background: #1e293b;
+                            border-radius: 8px;
+                            vertical-stretch: 1;
+
+                            ScrollView {
+                                x: 12px;
+                                y: 12px;
+                                width: parent.width - 24px;
+                                height: parent.height - 24px;
+
+                                Text {
+                                    text: selected-tab == 0 ? solution-text : asp-code;
+                                    font-size: 12px;
+                                    font-family: "monospace";
+                                    color: #e2e8f0;
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+                    }
+
+                    // Empty state
+                    if !is-loading && !has-solution && !needs-info && !not-suitable && error-message == "": VerticalBox {
+                        alignment: center;
+                        spacing: 12px;
+
+                        Text {
+                            text: "💡";
+                            font-size: 48px;
+                            horizontal-alignment: center;
+                        }
+
+                        Text {
+                            text: "Ready to Optimize";
+                            font-size: 16px;
+                            font-weight: 600;
+                            color: #374151;
+                            horizontal-alignment: center;
+                        }
+
+                        Text {
+                            text: "Describe any planning or scheduling problem.\nGet guaranteed optimal solutions without learning constraint programming.";
+                            font-size: 13px;
+                            color: #6b7280;
+                            horizontal-alignment: center;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Footer
+        Rectangle {
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        Rectangle {
+            height: 48px;
+            background: white;
+
+            Text {
+                text: "Guaranteed optimal solutions via Answer Set Programming";
+                font-size: 12px;
+                color: #9ca3af;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+}

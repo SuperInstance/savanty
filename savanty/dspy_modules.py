@@ -4,6 +4,33 @@ import dspy
 from typing import List, Dict, Any
 
 
+class ProblemSuitabilityCheck(dspy.Signature):
+    """Determine if a problem is suitable for Answer Set Programming (ASP) solving.
+
+    ASP is ideal for:
+    - Constraint satisfaction problems (scheduling, timetabling, assignments)
+    - Combinatorial optimization (knapsack, bin packing, team formation)
+    - Problems with discrete/categorical variables
+    - Problems requiring "find all solutions" or "find optimal among valid"
+    - Logic puzzles (Sudoku, N-Queens, graph coloring)
+
+    ASP is NOT ideal for:
+    - Continuous optimization (use scipy, cvxpy)
+    - Statistical/ML problems (use sklearn, pytorch)
+    - Simple arithmetic calculations
+    - Problems requiring real-time streaming data
+    - Numerical simulations
+    - Problems with continuous variables and gradients
+    """
+
+    problem_description = dspy.InputField(desc="Natural language description of the problem")
+    is_suitable = dspy.OutputField(desc="'yes' if ASP is the right tool, 'no' if another tool would be better, 'maybe' if unclear")
+    problem_type = dspy.OutputField(desc="Type of problem: 'constraint_satisfaction', 'combinatorial_optimization', 'continuous_optimization', 'statistical', 'arithmetic', 'simulation', or 'other'")
+    reasoning = dspy.OutputField(desc="Brief explanation of why this problem is or isn't suitable for ASP")
+    suggested_tool = dspy.OutputField(desc="If not suitable for ASP, suggest the right tool: 'scipy' for continuous optimization, 'cvxpy' for convex optimization, 'calculator' for simple math, 'pandas' for data analysis, 'none' if ASP is suitable")
+    confidence = dspy.OutputField(desc="Confidence level: 'high', 'medium', or 'low'")
+
+
 class ProblemAnalysis(dspy.Signature):
     """Analyze an optimization problem description and extract structured information."""
     
@@ -37,10 +64,31 @@ class ProgramGeneration(dspy.Signature):
 
 class ProblemRefinement(dspy.Signature):
     """Refine a problem description with additional information."""
-    
+
     original_problem = dspy.InputField(desc="Original problem description")
     additional_info = dspy.InputField(desc="Additional information provided by the user")
     refined_problem = dspy.OutputField(desc="Refined problem description with additional information incorporated")
+
+
+class SolutionVisualization(dspy.Signature):
+    """Generate an HTML visualization for an optimization solution.
+
+    Create a visually appealing, self-contained HTML snippet that displays the solution
+    in an intuitive way. Use appropriate visualizations based on the problem type:
+    - Schedules: Use tables/grids with color coding
+    - Assignments: Use cards or grouped lists
+    - Seating: Use visual table layouts
+    - Meal plans: Use calendar-style weekly view
+    - Team formation: Use team cards with member details
+
+    The HTML should be self-contained with inline CSS (Tailwind-style classes are fine).
+    Use colors meaningfully to distinguish different categories/assignments.
+    Make it readable and professional.
+    """
+
+    problem_description = dspy.InputField(desc="Original problem description")
+    solution = dspy.InputField(desc="The solution output from the ASP solver")
+    visualization_html = dspy.OutputField(desc="Self-contained HTML snippet visualizing the solution. Use inline styles or simple CSS. Include a title and clear visual representation of the solution.")
 
 
 class InteractiveProblemSolver(dspy.Module):

@@ -1,43 +1,71 @@
-[tool.poetry]
+[project]
 name = "savanty"
 version = "0.2.1"
-description = "An intelligent optimization problem solver using LLMs and Answer Set Programming"
-authors = ["Dipankar Sarkar <me@dipankar.name>"]
+description = "AI agent that turns vague planning problems into optimal solutions"
+authors = [{ name = "Dipankar Sarkar", email = "me@dipankar.name" }]
 readme = "README.md"
-license = "MIT"
-repository = "https://github.com/skelf-research/savanty"
-keywords = ["optimization", "llm", "asp", "clingo", "clorm", "ai"]
+license = { text = "MIT" }
+requires-python = ">=3.10,<3.14"
+keywords = ["planning", "scheduling", "optimization", "ai-agent", "llm", "asp", "constraint-satisfaction"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Software Development :: Libraries :: Python Modules"
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "fastapi>=0.115.12",
+    "uvicorn>=0.31.1",
+    "openai>=1.0.0",
+    "clorm>=1.6.0",
+    "click>=8.0.0",
+    "dspy-ai>=3.0.0",
+    "fastmcp>=2.0.0",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-fastapi = "^0.115.12"
-uvicorn = "^0.31.1"
-openai = "^1.0.0"
-clorm = "^1.6.0"
-click = "^8.0.0"
-dspy-ai = "^3.0.0"
-fastmcp = "^2.0.0"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+desktop = [
+    "slint>=1.9.0",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.0.0"
-pytest-cov = "^4.0.0"
+[project.scripts]
+savanty = "savanty.cli:main"
+savanty-desktop = "desktop.main:main"
 
-[tool.poetry.scripts]
-savanty = "savant.cli:main"
+[project.gui-scripts]
+savanty-app = "desktop.main:main"
+
+[project.urls]
+Repository = "https://github.com/skelf-research/savanty"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["savanty", "desktop"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "savanty/",
+    "desktop/",
+    "README.md",
+    "LICENSE",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]

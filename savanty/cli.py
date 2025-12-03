@@ -2,10 +2,13 @@
 
 import os
 import sys
+from pathlib import Path
 from typing import Optional
 import click
-from fastapi import FastAPI, Form, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uvicorn
 from savanty.solver import solve_optimization_problem, ProblemSolverResult
@@ -26,26 +29,17 @@ def create_app():
     """Create and configure the FastAPI application."""
     app = FastAPI(title="Savanty API", version="0.2.0")
 
-    @app.get("/", response_class=HTMLResponse)
-    async def index():
-        """Render the main dashboard page."""
-        return """
-        <html>
-            <head>
-                <title>Savanty - Optimization Problem Solver</title>
-            </head>
-            <body>
-                <h1>Savanty - Optimization Problem Solver</h1>
-                <form action="/solve" method="post">
-                    <label for="problem_description">Problem Description:</label><br>
-                    <textarea id="problem_description" name="problem_description" rows="4" cols="50"></textarea><br>
-                    <label for="additional_info">Additional Information (optional):</label><br>
-                    <textarea id="additional_info" name="additional_info" rows="2" cols="50"></textarea><br>
-                    <input type="submit" value="Solve">
-                </form>
-            </body>
-        </html>
-        """
+    # Add CORS middleware for development
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",  # Vite dev server
+            "http://127.0.0.1:5173",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.post("/solve")
     async def solve(request: SolveRequest):
@@ -55,7 +49,14 @@ def create_app():
                 request.problem_description, request.additional_info
             )
 
-            if result.needs_more_info:
+            if result.not_suitable:
+                return {
+                    "not_suitable": True,
+                    "suggested_tool": result.suggested_tool,
+                    "reason": result.suitability_reason,
+                    "log": f"This problem is better suited for a different approach. {result.suitability_reason}"
+                }
+            elif result.needs_more_info:
                 return {
                     "needs_more_info": True,
                     "questions": result.questions,
@@ -69,6 +70,8 @@ def create_app():
             else:
                 return {
                     "solution": result.solution,
+                    "asp_code": result.asp_code,
+                    "visualization_html": result.visualization_html,
                     "log": "Problem solved successfully."
                 }
         except Exception as e:
@@ -76,6 +79,19 @@ def create_app():
                 "error": str(e),
                 "log": f"Error occurred while solving: {str(e)}"
             })
+
+    # Serve Vue frontend in production
+    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    if frontend_dist.exists():
+        app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="assets")
+
+        @app.get("/{full_path:path}")
+        async def serve_frontend(full_path: str):
+            """Serve the Vue frontend for all non-API routes."""
+            file_path = frontend_dist / full_path
+            if file_path.exists() and file_path.is_file():
+                return FileResponse(file_path)
+            return FileResponse(frontend_dist / "index.html")
 
     return app
 
@@ -133,12 +149,22 @@ def main(problem: Optional[str], web: bool, mcp: bool, port: int):
         
         while True:
             result = solve_optimization_problem(current_problem, additional_info)
-            
-            if result.needs_more_info:
+
+            if result.not_suitable:
+                click.echo("\n" + "="*60)
+                click.echo("This problem is better suited for a different tool.")
+                click.echo("="*60)
+                click.echo(f"\nReason: {result.suitability_reason}")
+                if result.suggested_tool:
+                    click.echo(f"\nSuggested tool: {result.suggested_tool}")
+                click.echo("\nSavanty excels at constraint satisfaction and combinatorial")
+                click.echo("optimization problems like scheduling, assignments, and planning.")
+                sys.exit(0)
+            elif result.needs_more_info:
                 click.echo("I need more information to solve this problem:")
                 for i, question in enumerate(result.questions, 1):
                     click.echo(f"{i}. {question}")
-                
+
                 # Ask user for additional information
                 user_input = click.prompt("Please provide the missing information", type=str)
                 additional_info = user_input
