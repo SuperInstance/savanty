@@ -89,7 +89,7 @@
     <!-- Tab Content -->
     <div>
       <!-- Visualization Tab -->
-      <div v-if="activeTab === 'visualization' && visualizationHtml">
+      <div v-if="activeTab === 'visualization' && sanitizedVisualization">
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
           <div class="flex items-center gap-2 text-green-700">
             <svg
@@ -110,7 +110,7 @@
         </div>
         <div
           class="visualization-container border border-gray-200 rounded-lg overflow-hidden"
-          v-html="visualizationHtml"
+          v-html="sanitizedVisualization"
         ></div>
       </div>
 
@@ -152,8 +152,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import AspCodeViewer from './AspCodeViewer.vue'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const props = defineProps<{
   solution: string
@@ -162,6 +163,14 @@ const props = defineProps<{
 }>()
 
 const activeTab = ref<'visualization' | 'solution' | 'asp'>('visualization')
+
+// Sanitize visualization HTML to prevent XSS
+const sanitizedVisualization = computed(() => {
+  if (props.visualizationHtml) {
+    return sanitizeHtml(props.visualizationHtml)
+  }
+  return null
+})
 
 // Default to visualization if available, otherwise solution
 watch(

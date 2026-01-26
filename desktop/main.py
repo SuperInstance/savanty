@@ -5,9 +5,8 @@ AI Planning Agent using Slint UI
 """
 
 import sys
-from pathlib import Path
-from typing import Optional
 from dataclasses import dataclass
+from pathlib import Path
 
 # Check for slint dependency and provide helpful error
 try:
@@ -219,6 +218,7 @@ Form balanced, capable teams.""",
 @dataclass
 class AppState:
     """Application state"""
+
     problem_text: str = ""
     additional_info: str = ""
     is_loading: bool = False
@@ -301,7 +301,7 @@ class SavantyApp:
             # Call the solver
             result = solve_optimization_problem(
                 self._current_problem,
-                additional_info=self._additional_info if self._additional_info else None
+                additional_info=self._additional_info if self._additional_info else None,
             )
 
             if result.not_suitable:

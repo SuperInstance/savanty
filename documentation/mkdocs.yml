@@ -1,0 +1,124 @@
+site_name: Savanty Documentation
+site_description: AI-powered optimization solver - Describe problems in plain English, get guaranteed optimal solutions
+site_author: Dipankar Sarkar
+site_url: https://docs.skelfresearch.com/savanty
+
+repo_name: skelf-research/savanty
+repo_url: https://github.com/skelf-research/savanty
+edit_uri: edit/main/documentation/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - tables
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      auto_title: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: skelf-research
+      repo: savanty
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/skelf-research/savanty
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/savanty/
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Installation: installation.md
+  - User Guide:
+    - user-guide/index.md
+    - CLI Usage: user-guide/cli.md
+    - Web Interface: user-guide/web-interface.md
+    - Desktop App: user-guide/desktop-app.md
+    - Python API: user-guide/python-api.md
+  - Examples:
+    - examples/index.md
+    - Staff Scheduling: examples/scheduling.md
+    - Route Planning: examples/routing.md
+    - Resource Allocation: examples/allocation.md
+    - Event Seating: examples/seating.md
+    - Timetabling: examples/timetabling.md
+    - Team Formation: examples/team-formation.md
+  - Concepts:
+    - How It Works: concepts/how-it-works.md
+    - ASP Primer: concepts/asp-primer.md
+    - When to Use Savanty: concepts/when-to-use.md
+  - Reference:
+    - API Reference: reference/api.md
+    - Configuration: reference/configuration.md
+    - REST API: reference/rest-api.md
+    - MCP Integration: reference/mcp-integration.md
+  - Troubleshooting: troubleshooting.md
+  - Contributing: contributing.md

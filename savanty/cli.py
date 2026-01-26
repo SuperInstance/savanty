@@ -1,84 +1,208 @@
 """Main application module for Savanty."""
 
+import asyncio
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+
 import click
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
 import uvicorn
-from savanty.solver import solve_optimization_problem, ProblemSolverResult
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field, field_validator
+
+from savanty import __version__
+from savanty.logging_config import logger
+from savanty.solver import ConfigurationError, solve_optimization_problem
 
 try:
     from fastmcp import FastMCP
+
     FASTMCP_AVAILABLE = True
 except ImportError:
     FASTMCP_AVAILABLE = False
 
 
+# Configuration from environment
+MAX_PROBLEM_LENGTH = int(os.getenv("SAVANTY_MAX_PROBLEM_LENGTH", "10000"))
+MAX_ADDITIONAL_INFO_LENGTH = int(os.getenv("SAVANTY_MAX_ADDITIONAL_INFO_LENGTH", "5000"))
+SOLVE_TIMEOUT = int(os.getenv("SAVANTY_SOLVE_TIMEOUT", "120"))
+
+
 class SolveRequest(BaseModel):
-    problem_description: str
-    additional_info: str = ""
+    """Request model for the solve endpoint."""
+
+    problem_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_PROBLEM_LENGTH,
+        description="The optimization problem description",
+    )
+    additional_info: str = Field(
+        default="",
+        max_length=MAX_ADDITIONAL_INFO_LENGTH,
+        description="Additional context or answers to clarifying questions",
+    )
+
+    @field_validator("problem_description")
+    @classmethod
+    def validate_problem(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Problem description cannot be empty")
+        return v.strip()
+
+
+def get_cors_origins() -> list[str]:
+    """Get CORS origins from environment or use defaults for development."""
+    cors_origins = os.getenv("SAVANTY_CORS_ORIGINS")
+    if cors_origins:
+        return [origin.strip() for origin in cors_origins.split(",")]
+
+    # Default: development origins only
+    env = os.getenv("SAVANTY_ENV", "development")
+    if env == "production":
+        # In production, require explicit CORS configuration
+        logger.warning(
+            "Running in production mode without SAVANTY_CORS_ORIGINS set. CORS will be restrictive."
+        )
+        return []
+    return [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
 
 
 def create_app():
     """Create and configure the FastAPI application."""
-    app = FastAPI(title="Savanty API", version="0.2.0")
-
-    # Add CORS middleware for development
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost:5173",  # Vite dev server
-            "http://127.0.0.1:5173",
-        ],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    app = FastAPI(
+        title="Savanty API",
+        version=__version__,
+        description="AI-powered optimization solver using LLMs and ASP",
     )
+
+    # Add CORS middleware
+    cors_origins = get_cors_origins()
+    if cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        logger.debug(f"CORS enabled for origins: {cors_origins}")
+
+    # Global exception handler
+    @app.exception_handler(ConfigurationError)
+    async def configuration_error_handler(request: Request, exc: ConfigurationError):
+        logger.error(f"Configuration error: {exc}")
+        return JSONResponse(
+            status_code=503,
+            content={"error": str(exc), "type": "ConfigurationError"},
+        )
+
+    @app.exception_handler(Exception)
+    async def general_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Unexpected error: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"error": "An unexpected error occurred", "type": "InternalError"},
+        )
+
+    @app.get("/health")
+    async def health_check():
+        """Health check endpoint for monitoring."""
+        return {
+            "status": "healthy",
+            "version": __version__,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "checks": {
+                "api": "ok",
+                "openai_configured": bool(os.getenv("OPENAI_API_KEY")),
+            },
+        }
+
+    @app.get("/ready")
+    async def readiness_check():
+        """Readiness check - verifies the service can handle requests."""
+        if not os.getenv("OPENAI_API_KEY"):
+            raise HTTPException(
+                status_code=503,
+                detail={"status": "not_ready", "reason": "OPENAI_API_KEY not configured"},
+            )
+        return {"status": "ready"}
 
     @app.post("/solve")
     async def solve(request: SolveRequest):
-        """Solve an optimization problem."""
+        """Solve an optimization problem with timeout."""
+        logger.info(f"Solve request received: {request.problem_description[:50]}...")
         try:
-            result = solve_optimization_problem(
-                request.problem_description, request.additional_info
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    solve_optimization_problem,
+                    request.problem_description,
+                    request.additional_info,
+                ),
+                timeout=SOLVE_TIMEOUT,
             )
 
             if result.not_suitable:
+                logger.info("Problem not suitable for ASP")
                 return {
                     "not_suitable": True,
                     "suggested_tool": result.suggested_tool,
                     "reason": result.suitability_reason,
-                    "log": f"This problem is better suited for a different approach. {result.suitability_reason}"
+                    "log": f"This problem is better suited for a different approach. {result.suitability_reason}",
                 }
             elif result.needs_more_info:
+                logger.info(f"Problem needs more info: {len(result.questions)} questions")
                 return {
                     "needs_more_info": True,
                     "questions": result.questions,
-                    "log": "Please provide more information to solve this problem."
+                    "log": "Please provide more information to solve this problem.",
                 }
             elif result.error:
-                raise HTTPException(status_code=400, detail={
-                    "error": result.error,
-                    "log": f"Error occurred while solving: {result.error}"
-                })
+                logger.warning(f"Solver returned error: {result.error}")
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": result.error,
+                        "log": f"Error occurred while solving: {result.error}",
+                    },
+                )
             else:
+                logger.info("Problem solved successfully")
                 return {
                     "solution": result.solution,
                     "asp_code": result.asp_code,
                     "visualization_html": result.visualization_html,
-                    "log": "Problem solved successfully."
+                    "log": "Problem solved successfully.",
                 }
+        except asyncio.TimeoutError:
+            logger.warning(f"Solve request timed out after {SOLVE_TIMEOUT}s")
+            raise HTTPException(
+                status_code=408,
+                detail={
+                    "error": f"Request timed out after {SOLVE_TIMEOUT} seconds",
+                    "log": "The problem took too long to solve. Try simplifying it.",
+                },
+            ) from None
+        except HTTPException:
+            raise
         except Exception as e:
-            raise HTTPException(status_code=400, detail={
-                "error": str(e),
-                "log": f"Error occurred while solving: {str(e)}"
-            })
+            logger.error(f"Unexpected error in solve: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "log": f"Error occurred while solving: {str(e)}",
+                },
+            ) from e
 
     # Serve Vue frontend in production
     frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
@@ -97,34 +221,42 @@ def create_app():
 
 
 @click.command()
-@click.option('--problem', '-p', help='Optimization problem description')
-@click.option('--web', '-w', is_flag=True, help='Run web interface')
-@click.option('--mcp', '-m', is_flag=True, help='Run as Model Context Protocol server')
-@click.option('--port', default=int(os.getenv('SAVANTY_PORT', 8000)), help='Port for web interface')
-def main(problem: Optional[str], web: bool, mcp: bool, port: int):
+@click.option("--problem", "-p", help="Optimization problem description")
+@click.option("--web", "-w", is_flag=True, help="Run web interface")
+@click.option("--mcp", "-m", is_flag=True, help="Run as Model Context Protocol server")
+@click.option(
+    "--port",
+    default=int(os.getenv("SAVANTY_PORT", 8000)),
+    help="Port for web interface",
+)
+@click.version_option(version=__version__)
+def main(problem: str | None, web: bool, mcp: bool, port: int):
     """Savanty CLI - An intelligent optimization problem solver.
-    
+
     Examples:
-      savanty -p "Minimize x+y subject to x>=0, y>=0, x+y<=10"
+      savanty -p "Schedule 4 nurses for 3 shifts over a week"
       savanty --web
       savanty --mcp
     """
     if mcp:
         # Run as MCP server
         if not FASTMCP_AVAILABLE:
-            print("Error: fastmcp package not installed. Please run 'pip install fastmcp'")
+            click.echo(
+                "Error: fastmcp package not installed. Please run 'pip install fastmcp'",
+                err=True,
+            )
             sys.exit(1)
-            
+
         # Create FastMCP app
-            mcp_app = FastMCP("Savanty Optimizer")
-        
+        mcp_app = FastMCP("Savanty Optimizer")
+
         @mcp_app.prompt(name="solve_optimization")
         async def solve_optimization(problem: str) -> str:
-            """Solve an optimization problem using Savant.
-            
+            """Solve an optimization problem using Savanty.
+
             Args:
                 problem: The optimization problem description
-                
+
             Returns:
                 The solution to the optimization problem
             """
@@ -135,25 +267,28 @@ def main(problem: Optional[str], web: bool, mcp: bool, port: int):
                 return f"Solution: {result.solution}"
             except Exception as e:
                 return f"Error occurred: {str(e)}"
-        
-        print("Starting Savanty MCP server on stdin/stdout...")
+
+        logger.info("Starting Savanty MCP server on stdin/stdout...")
+        click.echo("Starting Savanty MCP server on stdin/stdout...")
         mcp_app.run()
     elif web:
         # Run web interface
+        logger.info(f"Starting Savanty web server on port {port}")
+        click.echo(f"Starting Savanty web server on http://0.0.0.0:{port}")
         app = create_app()
         uvicorn.run(app, host="0.0.0.0", port=port)
     elif problem:
         # Solve problem from command line
         current_problem = problem
         additional_info = ""
-        
+
         while True:
             result = solve_optimization_problem(current_problem, additional_info)
 
             if result.not_suitable:
-                click.echo("\n" + "="*60)
+                click.echo("\n" + "=" * 60)
                 click.echo("This problem is better suited for a different tool.")
-                click.echo("="*60)
+                click.echo("=" * 60)
                 click.echo(f"\nReason: {result.suitability_reason}")
                 if result.suggested_tool:
                     click.echo(f"\nSuggested tool: {result.suggested_tool}")
@@ -179,9 +314,9 @@ def main(problem: Optional[str], web: bool, mcp: bool, port: int):
                 break
     else:
         # Show help if no options provided
-        click.echo("Savanty: An intelligent optimization problem solver")
+        click.echo(f"Savanty v{__version__}: An intelligent optimization problem solver")
         click.echo("Use --help for more information")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
