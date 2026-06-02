@@ -1,0 +1,68 @@
+{
+  "id": "tt5_3slot",
+  "domain": "timetabling",
+  "size": 5,
+  "variant": "feasible",
+  "nl_description": "Schedule 5 courses (course1..course5) into time slots ['mon', 'tue', 'wed'].\nCourses that share students or a room cannot be in the same slot. Conflicting pairs:\n(course1,course2), (course2,course3), (course4,course5). Forbidden course/slot placements: none. Give each course exactly one slot.",
+  "variables": [
+    "course1",
+    "course2",
+    "course3",
+    "course4",
+    "course5"
+  ],
+  "domains": {
+    "course1": [
+      "mon",
+      "tue",
+      "wed"
+    ],
+    "course2": [
+      "mon",
+      "tue",
+      "wed"
+    ],
+    "course3": [
+      "mon",
+      "tue",
+      "wed"
+    ],
+    "course4": [
+      "mon",
+      "tue",
+      "wed"
+    ],
+    "course5": [
+      "mon",
+      "tue",
+      "wed"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course2"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course4",
+      "b": "course5"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "course5": "wed",
+    "course4": "mon",
+    "course3": "wed",
+    "course2": "mon",
+    "course1": "tue"
+  }
+}

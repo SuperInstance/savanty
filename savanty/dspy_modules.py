@@ -75,11 +75,77 @@ class GapIdentification(dspy.Signature):
 
 
 class ProgramGeneration(dspy.Signature):
-    """Generate ASP program components from problem analysis."""
+    """Generate a complete Answer Set Programming (ASP) encoding from a problem analysis.
+
+    CANONICAL DECISION CONTRACT (mandatory): model every decision as a single relation
+    ``assign(Var, Value)`` where each decision variable ``Var`` takes exactly one ``Value``.
+    Use a choice rule to generate candidates, e.g. ``1 { assign(V,A); assign(V,B) } 1 :- var(V).``
+    Encode every requirement as an integrity constraint (a rule starting with ``:-``).
+    The harness appends ``#show assign/2.`` automatically.
+
+    Output STRICT JSON with exactly these keys:
+      - "facts":    list of ASP fact strings encoding the problem data (each ends with '.').
+      - "rules":    list of ASP rule strings: the choice rule(s) that generate assign/2 AND
+                    every integrity constraint (':- ...') that enforces a requirement.
+      - "optimize": a single ASP optimization directive string (e.g.
+                    "#maximize { W,V,Val : assign(V,Val), objw(V,Val,W) }.") or "" if none.
+    Do NOT include '#show'. Use only lowercase constant identifiers for terms.
+    """
 
     analysis = dspy.InputField(desc="Structured analysis of an optimization problem")
     program_components = dspy.OutputField(
-        desc="JSON structure with predicates, facts, constraints, and optimization statement for ASP"
+        desc='STRICT JSON: {"facts": [...], "rules": [...], "optimize": "..."} using the '
+        "assign(Var,Value) contract described above"
+    )
+
+
+class ASPRepair(dspy.Signature):
+    """Repair an ASP encoding that failed, using solver-grounded diagnostics.
+
+    You are given the current encoding, the failure type, and targeted feedback derived
+    from the clingo solver (e.g. a parse error, or the MINIMAL SET OF CONSTRAINTS that are
+    jointly unsatisfiable). Revise the encoding so it solves correctly while still
+    faithfully modelling the problem.
+
+    - On 'syntax_error': fix the malformed rule(s) named in the feedback.
+    - On 'unsat': the named constraints cannot all hold at once. Decide whether one of them
+      MISFORMALIZES the problem (then correct or remove it) or whether the problem is
+      genuinely infeasible (then return the encoding unchanged so infeasibility is reported).
+    - On 'empty': you did not emit any assign(Var,Value) decision atoms; add the choice rule
+      and ensure decisions surface as assign/2.
+
+    Keep the SAME canonical assign(Var,Value) contract and the SAME strict-JSON output
+    format as program generation: {"facts": [...], "rules": [...], "optimize": "..."}.
+    """
+
+    problem_description = dspy.InputField(desc="The natural-language problem to model")
+    current_program_components = dspy.InputField(
+        desc='The current encoding as JSON {"facts":[...],"rules":[...],"optimize":"..."}'
+    )
+    failure_type = dspy.InputField(desc="One of: syntax_error, unsat, empty")
+    solver_feedback = dspy.InputField(
+        desc="Targeted, solver-grounded diagnostics (parse error or minimal conflicting constraints)"
+    )
+    repaired_program_components = dspy.OutputField(
+        desc='Repaired encoding as STRICT JSON {"facts":[...],"rules":[...],"optimize":"..."}'
+    )
+
+
+class ASPRepairGeneric(dspy.Signature):
+    """Repair an ASP encoding given only the raw solver message (Logic-LM-style refinement).
+
+    You are given the current encoding and the solver's raw output/error. Revise the
+    encoding so it solves. Keep the same strict-JSON output format as program generation:
+    {"facts": [...], "rules": [...], "optimize": "..."}.
+    """
+
+    problem_description = dspy.InputField(desc="The natural-language problem to model")
+    current_program_components = dspy.InputField(
+        desc='The current encoding as JSON {"facts":[...],"rules":[...],"optimize":"..."}'
+    )
+    solver_feedback = dspy.InputField(desc="The raw solver message / error")
+    repaired_program_components = dspy.OutputField(
+        desc='Repaired encoding as STRICT JSON {"facts":[...],"rules":[...],"optimize":"..."}'
     )
 
 

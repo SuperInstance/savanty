@@ -1,0 +1,74 @@
+{
+  "id": "team6_2x3",
+  "domain": "team_assignment",
+  "size": 6,
+  "variant": "feasible",
+  "nl_description": "Assign 6 people (p1..p6) to the teams ['alpha', 'beta']. Each team can hold at\nmost 3 people. The following pairs must NOT be on the same team: (p1,p2).\nForbidden person/team placements: p3!=beta. Give each person exactly one team.",
+  "variables": [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "p5",
+    "p6"
+  ],
+  "domains": {
+    "p1": [
+      "alpha",
+      "beta"
+    ],
+    "p2": [
+      "alpha",
+      "beta"
+    ],
+    "p3": [
+      "alpha",
+      "beta"
+    ],
+    "p4": [
+      "alpha",
+      "beta"
+    ],
+    "p5": [
+      "alpha",
+      "beta"
+    ],
+    "p6": [
+      "alpha",
+      "beta"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "alpha",
+      "max": 3
+    },
+    {
+      "type": "capacity",
+      "value": "beta",
+      "max": 3
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p2"
+    },
+    {
+      "type": "forbidden",
+      "var": "p3",
+      "value": "beta"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "p3": "alpha",
+    "p2": "alpha",
+    "p1": "beta",
+    "p4": "alpha",
+    "p5": "beta",
+    "p6": "beta"
+  }
+}

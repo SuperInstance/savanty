@@ -1,13 +1,26 @@
-"""Core solver module for Savanty using DSPy."""
+"""Core solver module for Savanty.
+
+Pipeline: natural language --(LLM, DSPy)--> ASP encoding over a canonical ``assign(Var,Value)``
+relation --(clingo)--> answer set. The novel piece is a **solver-grounded self-repair loop**:
+when clingo reports a failure, the solver builds *typed, localized* diagnostics — in particular a
+**minimal unsatisfiable core** over the model's own constraints — and asks the LLM to repair the
+encoding. A ``generic`` repair mode (raw error message only) reproduces Logic-LM-style refinement
+as a baseline.
+"""
+
+from __future__ import annotations
 
 import json
 import os
+from dataclasses import dataclass, field
 from typing import Any
 
 import dspy
-from clorm.clingo import Control
 
+from savanty.asp_runtime import parse_assign_atoms, run_clingo
 from savanty.dspy_modules import (
+    ASPRepair,
+    ASPRepairGeneric,
     InteractiveProblemSolver,
     ProblemSuitabilityCheck,
     SolutionVisualization,
@@ -17,6 +30,9 @@ from savanty.logging_config import logger
 # LLM configuration (lazy initialization)
 _lm_instance = None
 
+OLLAMA_BASE_URL = "https://ollama.com/v1"
+DEFAULT_OLLAMA_MODEL = "gemma4:31b-cloud"
+
 
 class ConfigurationError(Exception):
     """Raised when configuration is invalid."""
@@ -25,18 +41,37 @@ class ConfigurationError(Exception):
 
 
 def _get_configured_lm():
-    """Get a configured LLM instance with proper API key validation."""
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    llm_model = os.getenv("SAVANTY_LLM_MODEL", "openai/gpt-4o")
+    """Build a DSPy LM. Prefers Ollama Cloud (OpenAI-compatible); falls back to OpenAI.
 
-    if not openai_api_key:
-        raise ConfigurationError(
-            "OPENAI_API_KEY environment variable is required. "
-            "Please set it: export OPENAI_API_KEY=your_key_here"
+    Env:
+      SAVANTY_LLM_MODEL : model tag (e.g. "gemma4:31b-cloud"); default depends on backend.
+      OLLAMA_API_KEY    : bearer key for Ollama Cloud (https://ollama.com/v1).
+      OPENAI_API_KEY    : used only when OLLAMA_API_KEY is absent.
+    """
+    ollama_key = os.getenv("OLLAMA_API_KEY")
+    if ollama_key:
+        model = os.getenv("SAVANTY_LLM_MODEL", DEFAULT_OLLAMA_MODEL)
+        # DSPy/LiteLLM "openai/<model>" provider routed at Ollama's OpenAI-compatible endpoint.
+        lm_id = model if model.startswith("openai/") else f"openai/{model}"
+        logger.debug(f"Configuring Ollama Cloud LM: {lm_id} @ {OLLAMA_BASE_URL}")
+        return dspy.LM(
+            lm_id,
+            api_key=ollama_key,
+            api_base=OLLAMA_BASE_URL,
+            model_type="chat",
+            temperature=0.0,
+            max_tokens=4000,
         )
 
-    logger.debug(f"Configuring LLM with model: {llm_model}")
-    return dspy.LM(llm_model, api_key=openai_api_key)
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ConfigurationError(
+            "Set OLLAMA_API_KEY (for Ollama Cloud) or OPENAI_API_KEY. "
+            "e.g. export OLLAMA_API_KEY=your_key_here"
+        )
+    model = os.getenv("SAVANTY_LLM_MODEL", "openai/gpt-4o")
+    logger.debug(f"Configuring OpenAI LM: {model}")
+    return dspy.LM(model, api_key=openai_api_key)
 
 
 def _ensure_lm_configured():
@@ -62,6 +97,11 @@ class ProblemSolverResult:
         not_suitable: bool = False,
         suggested_tool: str = None,
         suitability_reason: str = None,
+        assignment: dict[str, str] | None = None,
+        infeasible: bool = False,
+        repair_trace: list[dict] | None = None,
+        repair_iters: int = 0,
+        final_failure_type: str | None = None,
     ):
         self.needs_more_info = needs_more_info
         self.questions = questions or []
@@ -69,10 +109,145 @@ class ProblemSolverResult:
         self.asp_code = asp_code
         self.visualization_html = visualization_html
         self.error = error
-        # New fields for suitability check
         self.not_suitable = not_suitable
         self.suggested_tool = suggested_tool
         self.suitability_reason = suitability_reason
+        # Canonical assignment + repair instrumentation (used by the eval harness).
+        self.assignment = assignment
+        self.infeasible = infeasible
+        self.repair_trace = repair_trace or []
+        self.repair_iters = repair_iters
+        self.final_failure_type = final_failure_type
+
+
+# --- ASP assembly + solving --------------------------------------------------------
+
+
+@dataclass
+class SolveOutcome:
+    """Structured result of compiling + solving one ASP encoding."""
+
+    failure_type: str  # ok | syntax_error | unsat | empty
+    assignment: dict[str, str] = field(default_factory=dict)
+    asp_code: str = ""
+    solver_feedback: str = ""
+    unsat_core: list[str] = field(default_factory=list)
+    optimal: bool = False
+
+
+def _split_rules(rules: list[str]) -> tuple[list[str], list[str]]:
+    """Partition rules into integrity constraints (start with ':-') and base rules."""
+    constraints, base = [], []
+    for r in rules:
+        (constraints if r.strip().startswith(":-") else base).append(r)
+    return constraints, base
+
+
+def assemble_program(components: dict[str, Any], with_optimize: bool = True) -> str:
+    """Assemble a full ASP program string from {facts, rules, optimize}."""
+    facts = components.get("facts", []) or []
+    rules = components.get("rules", []) or []
+    optimize = (components.get("optimize") or "").strip() if with_optimize else ""
+    parts = list(facts) + list(rules)
+    if optimize:
+        parts.append(optimize)
+    parts.append("#show assign/2.")
+    return "\n".join(parts)
+
+
+def minimal_unsat_core(components: dict[str, Any]) -> list[str]:
+    """Deletion-filtering minimal unsatisfiable subset over the integrity constraints.
+
+    Operates only on the model's *own* constraints (no ground-truth leakage). Optimisation
+    is dropped — this is a pure satisfiability question. Returns a minimal subset of
+    constraints that is still unsatisfiable together with the base rules/facts; removing any
+    one of them would make the program satisfiable.
+    """
+    facts = components.get("facts", []) or []
+    constraints, base = _split_rules(components.get("rules", []) or [])
+    base_prog = "\n".join(list(facts) + list(base))
+
+    def sat(subset: list[str]) -> bool:
+        prog = base_prog + "\n" + "\n".join(subset) + "\n#show assign/2."
+        res = run_clingo(prog)
+        # Treat a syntax error as "satisfiable" here so we don't wrongly blame a constraint
+        # for a parse failure elsewhere; UNSAT only counts as genuine unsatisfiability.
+        return res.error is not None or res.sat
+
+    if sat(constraints):  # base+all-constraints is actually SAT -> no core
+        return []
+    core = list(constraints)
+    for c in list(constraints):
+        trial = [x for x in core if x != c]
+        if not sat(trial):  # still UNSAT without c -> c is not needed in the core
+            core = trial
+    return core
+
+
+def compile_and_solve(components: dict[str, Any]) -> SolveOutcome:
+    """Compile {facts, rules, optimize} to ASP, solve with clingo, classify the outcome."""
+    program = assemble_program(components, with_optimize=True)
+    res = run_clingo(program)
+
+    if res.error:
+        return SolveOutcome(
+            failure_type="syntax_error", asp_code=program, solver_feedback=res.error.strip()
+        )
+
+    if not res.sat:
+        core = minimal_unsat_core(components)
+        return SolveOutcome(
+            failure_type="unsat",
+            asp_code=program,
+            unsat_core=core,
+            solver_feedback="clingo found no answer set (unsatisfiable).",
+        )
+
+    assignment = parse_assign_atoms(res.symbols)
+    if not assignment:
+        return SolveOutcome(
+            failure_type="empty",
+            asp_code=program,
+            solver_feedback="The program is satisfiable but emitted no assign/2 atoms.",
+        )
+
+    return SolveOutcome(
+        failure_type="ok", assignment=assignment, asp_code=program, optimal=res.optimal
+    )
+
+
+def _build_feedback(outcome: SolveOutcome, repair_mode: str) -> str:
+    """Construct the repair feedback string for a failure outcome."""
+    if repair_mode == "generic":
+        # Logic-LM-style: just hand back the raw solver message, no taxonomy, no core.
+        return outcome.solver_feedback
+
+    # typed_core (ours): typed guidance + minimal conflicting constraints when UNSAT.
+    if outcome.failure_type == "syntax_error":
+        return (
+            f"clingo could not ground/parse the program. Error:\n{outcome.solver_feedback}\n"
+            "Fix the offending rule; ensure all rules are valid ASP and variables are safe."
+        )
+    if outcome.failure_type == "unsat":
+        if outcome.unsat_core:
+            core_txt = "\n".join(f"  - {c}" for c in outcome.unsat_core)
+            return (
+                "The following integrity constraints are JOINTLY UNSATISFIABLE (a minimal "
+                f"conflicting set):\n{core_txt}\n"
+                "Exactly these constraints cannot all hold together. If one of them "
+                "misformalizes the problem, correct or remove it. If the problem is genuinely "
+                "infeasible, leave the encoding unchanged."
+            )
+        return "The program is unsatisfiable. Reconsider whether a constraint is too strong."
+    if outcome.failure_type == "empty":
+        return (
+            "The program solved but produced no assign(Var,Value) decisions. Add the choice "
+            "rule that generates assign/2 for every decision variable."
+        )
+    return outcome.solver_feedback
+
+
+# --- public pipeline ---------------------------------------------------------------
 
 
 def check_problem_suitability(problem_description: str) -> dict:
@@ -90,178 +265,170 @@ def check_problem_suitability(problem_description: str) -> dict:
     }
 
 
-def generate_visualization(problem_description: str, solution: str) -> str:
-    """Generate an HTML visualization of the solution using DSPy."""
-    _ensure_lm_configured()
-    try:
-        logger.debug("Generating solution visualization")
-        visualizer = dspy.Predict(SolutionVisualization)
-        result = visualizer(problem_description=problem_description, solution=solution)
-        return result.visualization_html
-    except Exception as e:
-        logger.warning(f"Visualization generation failed: {e}")
-        # If visualization fails, return a simple fallback
-        return f"""
-        <div style="font-family: system-ui, sans-serif; padding: 20px;">
-            <h3 style="color: #1e40af; margin-bottom: 16px;">Solution</h3>
-            <pre style="background: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap;">{solution}</pre>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 12px;">
-                <em>Visualization generation failed: {str(e)}</em>
-            </p>
-        </div>
-        """
-
-
-def generate_clorm_predicates(predicates: list[dict[str, Any]]) -> str:
-    """Generate Clorm predicate classes from parsed predicates."""
-    predicate_code = ""
-    for pred in predicates:
-        fields = ", ".join(
-            [f"{field} = {field_type}" for field, field_type in pred["fields"].items()]
-        )
-        predicate_code += f"""
-class {pred["name"]}(Predicate):
-    {fields}
-"""
-    return predicate_code
-
-
-def generate_asp_program(problem_info: dict[str, Any]) -> str:
-    """Generate ASP program from parsed problem information."""
-    constraints = "\n".join(problem_info["constraints"])
-    optimize = problem_info["optimize"]
-
-    return f"""
-{constraints}
-
-{optimize}
-
-#show.
-"""
-
-
 def validate_and_parse_problem(description: str, additional_info: str = None) -> dict[str, Any]:
-    """Validate and parse the optimization problem using DSPy."""
+    """Validate and parse the problem into ASP components {facts, rules, optimize}."""
     _ensure_lm_configured()
     logger.debug("Validating and parsing problem")
-
-    # Create the interactive problem solver
     solver = InteractiveProblemSolver()
-
     try:
-        # Run the DSPy pipeline
         result = solver.forward(problem_description=description, additional_info=additional_info)
-
-        # If the solver needs more information, return the questions
         if result.needs_more_info:
             raise ValueError("NEEDS_MORE_INFO:" + json.dumps(result.questions))
-
-        # Parse the program components
-        program_components = json.loads(result.program.program_components)
-
-        return program_components
+        return _parse_components(result.program.program_components)
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse program components: {e}")
         raise ValueError(f"Failed to parse program components from LLM output: {str(e)}") from e
     except Exception as e:
-        # Check if this is a "needs more info" error
         if str(e).startswith("NEEDS_MORE_INFO:"):
             raise
         logger.error(f"Error in DSPy processing: {e}")
         raise ValueError(f"Error in DSPy processing: {str(e)}") from e
 
 
+def _parse_components(raw: str) -> dict[str, Any]:
+    """Parse a (possibly fenced) JSON object into {facts, rules, optimize}."""
+    text = raw.strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1] if "```" in text[3:] else text.strip("`")
+        text = text[text.find("{") :] if "{" in text else text
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end != -1:
+        text = text[start : end + 1]
+    data = json.loads(text)
+    return {
+        "facts": data.get("facts", []) or [],
+        "rules": data.get("rules", []) or [],
+        "optimize": data.get("optimize", "") or "",
+    }
+
+
+def _repair(problem_description, components, outcome, repair_mode):
+    """Invoke the LLM repair step, returning new components (or raises ValueError)."""
+    feedback = _build_feedback(outcome, repair_mode)
+    current = json.dumps(components)
+    if repair_mode == "generic":
+        pred = dspy.Predict(ASPRepairGeneric)(
+            problem_description=problem_description,
+            current_program_components=current,
+            solver_feedback=feedback,
+        )
+    else:
+        pred = dspy.Predict(ASPRepair)(
+            problem_description=problem_description,
+            current_program_components=current,
+            failure_type=outcome.failure_type,
+            solver_feedback=feedback,
+        )
+    return _parse_components(pred.repaired_program_components), feedback
+
+
 def solve_optimization_problem(
-    problem_description: str, additional_info: str = None
+    problem_description: str,
+    additional_info: str = None,
+    enable_repair: bool = True,
+    max_repair_iters: int = 3,
+    repair_mode: str = "typed_core",
 ) -> ProblemSolverResult:
-    """Solve an optimization problem given its description using DSPy."""
+    """Solve a problem from its description.
+
+    repair_mode: "typed_core" (ours — typed feedback + minimal UNSAT core) or
+                 "generic" (Logic-LM-style — raw solver message only).
+    """
     logger.info("Starting optimization problem solving")
     try:
-        # Step 0: Check if problem is suitable for ASP
         suitability = check_problem_suitability(problem_description)
-
         if suitability["is_suitable"] == "no":
             logger.info(f"Problem not suitable for ASP: {suitability['reasoning']}")
-            # Problem is not suitable for ASP - return helpful message
-            tool_suggestions = {
-                "scipy": "scipy (pip install scipy) - for continuous optimization with gradients",
-                "cvxpy": "cvxpy (pip install cvxpy) - for convex optimization problems",
-                "calculator": "a simple calculator or spreadsheet",
-                "pandas": "pandas (pip install pandas) - for data analysis and aggregation",
-                "sklearn": "scikit-learn (pip install sklearn) - for machine learning tasks",
-                "none": None,
-            }
-            suggested = tool_suggestions.get(
-                suitability["suggested_tool"], suitability["suggested_tool"]
-            )
-
             return ProblemSolverResult(
                 not_suitable=True,
-                suggested_tool=suggested,
+                suggested_tool=suitability.get("suggested_tool"),
                 suitability_reason=suitability["reasoning"],
                 error=f"This problem is better suited for a different tool. {suitability['reasoning']}",
             )
 
-        # Step 1: Validate and parse the problem using DSPy
-        logger.debug("Parsing problem description")
-        problem_info = validate_and_parse_problem(problem_description, additional_info)
+        components = validate_and_parse_problem(problem_description, additional_info)
 
-        # Step 2: Generate Clorm predicates
-        logger.debug("Generating Clorm predicates")
-        predicate_code = generate_clorm_predicates(problem_info["predicates"])
-        exec(predicate_code, globals())  # noqa: S102
+        repair_trace: list[dict] = []
+        outcome = compile_and_solve(components)
+        iters = 0
+        while enable_repair and outcome.failure_type != "ok" and iters < max_repair_iters:
+            try:
+                new_components, feedback = _repair(
+                    problem_description, components, outcome, repair_mode
+                )
+            except Exception as e:  # repair generation failed; stop looping
+                logger.warning(f"Repair step failed: {e}")
+                break
+            repair_trace.append(
+                {
+                    "iter": iters,
+                    "failure_type": outcome.failure_type,
+                    "unsat_core_size": len(outcome.unsat_core),
+                    "feedback": feedback[:500],
+                }
+            )
+            components = new_components
+            outcome = compile_and_solve(components)
+            iters += 1
 
-        # Step 3: Construct the ASP program
-        logger.debug("Constructing ASP program")
-        asp_program = generate_asp_program(problem_info)
+        full_asp_code = outcome.asp_code
 
-        # Step 4: Solve the optimization problem
-        logger.debug("Running Clingo solver")
-        ctrl = Control(unifier=[globals()[pred["name"]] for pred in problem_info["predicates"]])
+        if outcome.failure_type == "ok":
+            solution_str = "; ".join(f"{k}={v}" for k, v in sorted(outcome.assignment.items()))
+            logger.info(f"Solved with {len(outcome.assignment)} assignments (iters={iters})")
+            return ProblemSolverResult(
+                solution=solution_str,
+                asp_code=full_asp_code,
+                assignment=outcome.assignment,
+                repair_trace=repair_trace,
+                repair_iters=iters,
+                final_failure_type="ok",
+            )
 
-        # Add facts
-        for fact in problem_info["facts"]:
-            if "(" in fact and ")" in fact:
-                predicate_name, *args = fact.split("(")
-                args = args[0].rstrip(")").split(",")
-                predicate_class = globals()[predicate_name]
-                ctrl.add_fact(predicate_class(*args))
+        if outcome.failure_type == "unsat":
+            # Report infeasibility (the correct answer for over-constrained problems).
+            logger.info(f"Reported infeasible after {iters} repair iters")
+            return ProblemSolverResult(
+                solution="UNSATISFIABLE",
+                asp_code=full_asp_code,
+                infeasible=True,
+                repair_trace=repair_trace,
+                repair_iters=iters,
+                final_failure_type="unsat",
+            )
 
-        ctrl.add_program(asp_program)
-
-        solution = None
-        with ctrl.solve(yield_=True) as sh:
-            for model in sh:
-                solution = model.facts(atoms=True)
-
-        # Build full ASP code for display
-        facts_code = "\n".join([f"{fact}." for fact in problem_info["facts"]])
-        full_asp_code = f"% Facts\n{facts_code}\n\n% Rules and Constraints\n{asp_program}"
-
-        solution_str = str(solution) if solution else "No solution found"
-        logger.info(f"Problem solved: {solution_str[:100]}...")
-
-        # Generate visualization
-        visualization_html = generate_visualization(problem_description, solution_str)
-
+        # syntax_error / empty that repair did not fix.
         return ProblemSolverResult(
-            solution=solution_str,
+            error=f"Could not produce a valid encoding ({outcome.failure_type}): "
+            f"{outcome.solver_feedback}",
             asp_code=full_asp_code,
-            visualization_html=visualization_html,
+            repair_trace=repair_trace,
+            repair_iters=iters,
+            final_failure_type=outcome.failure_type,
         )
+
     except ConfigurationError as e:
         logger.error(f"Configuration error: {e}")
         return ProblemSolverResult(error=str(e))
     except ValueError as e:
-        # Check if this is a "needs more info" error
         if str(e).startswith("NEEDS_MORE_INFO:"):
-            questions_json = str(e)[16:]  # Remove "NEEDS_MORE_INFO:" prefix
-            questions = json.loads(questions_json)
+            questions = json.loads(str(e)[16:])
             logger.info(f"Problem needs more info: {len(questions)} questions")
             return ProblemSolverResult(needs_more_info=True, questions=questions)
-        else:
-            logger.error(f"Validation error: {e}")
-            return ProblemSolverResult(error=str(e))
+        logger.error(f"Validation error: {e}")
+        return ProblemSolverResult(error=str(e))
     except Exception as e:
         logger.error(f"Error solving optimization problem: {e}", exc_info=True)
         return ProblemSolverResult(error=f"Error solving optimization problem: {str(e)}")
+
+
+def generate_visualization(problem_description: str, solution: str) -> str:
+    """Generate an HTML visualization of the solution using DSPy."""
+    _ensure_lm_configured()
+    try:
+        visualizer = dspy.Predict(SolutionVisualization)
+        result = visualizer(problem_description=problem_description, solution=solution)
+        return result.visualization_html
+    except Exception as e:
+        logger.warning(f"Visualization generation failed: {e}")
+        return f"<pre>{solution}</pre>"

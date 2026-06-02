@@ -1,0 +1,86 @@
+{
+  "id": "seat8_2x4",
+  "domain": "seating",
+  "size": 8,
+  "variant": "feasible",
+  "nl_description": "Seat 8 guests (g1..g8) at tables ['t1', 't2'], each seating at most 4.\nThese pairs must sit at the SAME table: (g1,g2). These pairs must sit at DIFFERENT\ntables: (g3,g4). Assign every guest to exactly one table.",
+  "variables": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g6",
+    "g7",
+    "g8"
+  ],
+  "domains": {
+    "g1": [
+      "t1",
+      "t2"
+    ],
+    "g2": [
+      "t1",
+      "t2"
+    ],
+    "g3": [
+      "t1",
+      "t2"
+    ],
+    "g4": [
+      "t1",
+      "t2"
+    ],
+    "g5": [
+      "t1",
+      "t2"
+    ],
+    "g6": [
+      "t1",
+      "t2"
+    ],
+    "g7": [
+      "t1",
+      "t2"
+    ],
+    "g8": [
+      "t1",
+      "t2"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "t1",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "t2",
+      "max": 4
+    },
+    {
+      "type": "equal",
+      "a": "g1",
+      "b": "g2"
+    },
+    {
+      "type": "not_equal",
+      "a": "g3",
+      "b": "g4"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "g4": "t1",
+    "g3": "t2",
+    "g2": "t2",
+    "g1": "t2",
+    "g5": "t2",
+    "g6": "t1",
+    "g7": "t1",
+    "g8": "t1"
+  }
+}

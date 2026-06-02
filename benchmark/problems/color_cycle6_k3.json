@@ -1,0 +1,90 @@
+{
+  "id": "color_cycle6_k3",
+  "domain": "graph_coloring",
+  "size": 6,
+  "variant": "feasible",
+  "nl_description": "We must colour 6 regions, numbered n1..n6, using at most 3 colours (c1..c3).\nTwo regions that share a border must get different colours.\nBordering pairs (by region number): (1,2), (2,3), (3,4), (4,5), (5,6), (6,1).\nAssign exactly one colour to each region.",
+  "variables": [
+    "n1",
+    "n2",
+    "n3",
+    "n4",
+    "n5",
+    "n6"
+  ],
+  "domains": {
+    "n1": [
+      "c1",
+      "c2",
+      "c3"
+    ],
+    "n2": [
+      "c1",
+      "c2",
+      "c3"
+    ],
+    "n3": [
+      "c1",
+      "c2",
+      "c3"
+    ],
+    "n4": [
+      "c1",
+      "c2",
+      "c3"
+    ],
+    "n5": [
+      "c1",
+      "c2",
+      "c3"
+    ],
+    "n6": [
+      "c1",
+      "c2",
+      "c3"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "not_equal",
+      "a": "n1",
+      "b": "n2"
+    },
+    {
+      "type": "not_equal",
+      "a": "n2",
+      "b": "n3"
+    },
+    {
+      "type": "not_equal",
+      "a": "n3",
+      "b": "n4"
+    },
+    {
+      "type": "not_equal",
+      "a": "n4",
+      "b": "n5"
+    },
+    {
+      "type": "not_equal",
+      "a": "n5",
+      "b": "n6"
+    },
+    {
+      "type": "not_equal",
+      "a": "n6",
+      "b": "n1"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "n1": "c1",
+    "n6": "c2",
+    "n5": "c1",
+    "n4": "c2",
+    "n3": "c1",
+    "n2": "c2"
+  }
+}

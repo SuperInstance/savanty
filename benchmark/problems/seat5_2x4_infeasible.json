@@ -1,0 +1,67 @@
+{
+  "id": "seat5_2x4_infeasible",
+  "domain": "seating",
+  "size": 5,
+  "variant": "infeasible",
+  "nl_description": "Seat 5 guests (g1..g5) at tables ['t1', 't2'], each seating at most 4.\nThese pairs must sit at the SAME table: none. These pairs must sit at DIFFERENT\ntables: (g1,g2), (g2,g3), (g1,g3). Assign every guest to exactly one table.",
+  "variables": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5"
+  ],
+  "domains": {
+    "g1": [
+      "t1",
+      "t2"
+    ],
+    "g2": [
+      "t1",
+      "t2"
+    ],
+    "g3": [
+      "t1",
+      "t2"
+    ],
+    "g4": [
+      "t1",
+      "t2"
+    ],
+    "g5": [
+      "t1",
+      "t2"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "t1",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "t2",
+      "max": 4
+    },
+    {
+      "type": "not_equal",
+      "a": "g1",
+      "b": "g2"
+    },
+    {
+      "type": "not_equal",
+      "a": "g2",
+      "b": "g3"
+    },
+    {
+      "type": "not_equal",
+      "a": "g1",
+      "b": "g3"
+    }
+  ],
+  "objective": null,
+  "feasible": false,
+  "optimal_value": null,
+  "_reference_witness": null
+}

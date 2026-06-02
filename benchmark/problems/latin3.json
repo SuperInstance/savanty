@@ -1,0 +1,129 @@
+{
+  "id": "latin3",
+  "domain": "latin_square",
+  "size": 3,
+  "variant": "feasible",
+  "nl_description": "Fill an 3x3 grid (cell r<row>c<col>) with symbols d1..d3 so that every row contains\nall 3 symbols once and every column contains all 3 symbols once (a Latin square).\nAssign exactly one symbol to each cell.",
+  "variables": [
+    "r1c1",
+    "r1c2",
+    "r1c3",
+    "r2c1",
+    "r2c2",
+    "r2c3",
+    "r3c1",
+    "r3c2",
+    "r3c3"
+  ],
+  "domains": {
+    "r1c1": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r1c2": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r1c3": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r2c1": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r2c2": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r2c3": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r3c1": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r3c2": [
+      "d1",
+      "d2",
+      "d3"
+    ],
+    "r3c3": [
+      "d1",
+      "d2",
+      "d3"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c1",
+        "r1c2",
+        "r1c3"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r2c1",
+        "r2c2",
+        "r2c3"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r3c1",
+        "r3c2",
+        "r3c3"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c1",
+        "r2c1",
+        "r3c1"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c2",
+        "r2c2",
+        "r3c2"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c3",
+        "r2c3",
+        "r3c3"
+      ]
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "r3c3": "d1",
+    "r2c3": "d3",
+    "r1c3": "d2",
+    "r3c2": "d3",
+    "r2c2": "d2",
+    "r1c2": "d1",
+    "r3c1": "d2",
+    "r2c1": "d1",
+    "r1c1": "d3"
+  }
+}

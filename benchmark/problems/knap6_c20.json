@@ -1,0 +1,95 @@
+{
+  "id": "knap6_c20",
+  "domain": "knapsack",
+  "size": 6,
+  "variant": "feasible",
+  "nl_description": "A knapsack holds at most 20 units of weight. Choose a subset of the following items\nto put 'in' the knapsack (the rest stay 'out') so the total weight is within 20 and\nthe total value is as large as possible.\nItems: item1 (weight 6, value 10); item2 (weight 8, value 13); item3 (weight 3, value 4); item4 (weight 9, value 14); item5 (weight 5, value 7); item6 (weight 4, value 6).\nFor each item decide 'in' or 'out'.",
+  "variables": [
+    "item1",
+    "item2",
+    "item3",
+    "item4",
+    "item5",
+    "item6"
+  ],
+  "domains": {
+    "item1": [
+      "in",
+      "out"
+    ],
+    "item2": [
+      "in",
+      "out"
+    ],
+    "item3": [
+      "in",
+      "out"
+    ],
+    "item4": [
+      "in",
+      "out"
+    ],
+    "item5": [
+      "in",
+      "out"
+    ],
+    "item6": [
+      "in",
+      "out"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "weighted_capacity",
+      "weights": {
+        "item1": 6,
+        "item2": 8,
+        "item3": 3,
+        "item4": 9,
+        "item5": 5,
+        "item6": 4
+      },
+      "selected_value": "in",
+      "bound": 20
+    }
+  ],
+  "objective": {
+    "sense": "max",
+    "weights": {
+      "item1": {
+        "in": 10,
+        "out": 0
+      },
+      "item2": {
+        "in": 13,
+        "out": 0
+      },
+      "item3": {
+        "in": 4,
+        "out": 0
+      },
+      "item4": {
+        "in": 14,
+        "out": 0
+      },
+      "item5": {
+        "in": 7,
+        "out": 0
+      },
+      "item6": {
+        "in": 6,
+        "out": 0
+      }
+    }
+  },
+  "feasible": true,
+  "optimal_value": 31.0,
+  "_reference_witness": {
+    "item1": "out",
+    "item2": "in",
+    "item3": "in",
+    "item4": "in",
+    "item5": "out",
+    "item6": "out"
+  }
+}

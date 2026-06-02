@@ -1,0 +1,79 @@
+{
+  "id": "seat6_2x3_tight",
+  "domain": "seating",
+  "size": 6,
+  "variant": "tight",
+  "nl_description": "Seat 6 guests (g1..g6) at tables ['t1', 't2'], each seating at most 3.\nThese pairs must sit at the SAME table: (g1,g2), (g3,g4). These pairs must sit at DIFFERENT\ntables: (g1,g5). Assign every guest to exactly one table.",
+  "variables": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g6"
+  ],
+  "domains": {
+    "g1": [
+      "t1",
+      "t2"
+    ],
+    "g2": [
+      "t1",
+      "t2"
+    ],
+    "g3": [
+      "t1",
+      "t2"
+    ],
+    "g4": [
+      "t1",
+      "t2"
+    ],
+    "g5": [
+      "t1",
+      "t2"
+    ],
+    "g6": [
+      "t1",
+      "t2"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "t1",
+      "max": 3
+    },
+    {
+      "type": "capacity",
+      "value": "t2",
+      "max": 3
+    },
+    {
+      "type": "equal",
+      "a": "g1",
+      "b": "g2"
+    },
+    {
+      "type": "equal",
+      "a": "g3",
+      "b": "g4"
+    },
+    {
+      "type": "not_equal",
+      "a": "g1",
+      "b": "g5"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "g5": "t2",
+    "g1": "t1",
+    "g4": "t2",
+    "g3": "t2",
+    "g2": "t1",
+    "g6": "t1"
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "id": "latin4",
+  "domain": "latin_square",
+  "size": 4,
+  "variant": "feasible",
+  "nl_description": "Fill an 4x4 grid (cell r<row>c<col>) with symbols d1..d4 so that every row contains\nall 4 symbols once and every column contains all 4 symbols once (a Latin square).\nAssign exactly one symbol to each cell.",
+  "variables": [
+    "r1c1",
+    "r1c2",
+    "r1c3",
+    "r1c4",
+    "r2c1",
+    "r2c2",
+    "r2c3",
+    "r2c4",
+    "r3c1",
+    "r3c2",
+    "r3c3",
+    "r3c4",
+    "r4c1",
+    "r4c2",
+    "r4c3",
+    "r4c4"
+  ],
+  "domains": {
+    "r1c1": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r1c2": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r1c3": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r1c4": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r2c1": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r2c2": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r2c3": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r2c4": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r3c1": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r3c2": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r3c3": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r3c4": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r4c1": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r4c2": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r4c3": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ],
+    "r4c4": [
+      "d1",
+      "d2",
+      "d3",
+      "d4"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c1",
+        "r1c2",
+        "r1c3",
+        "r1c4"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r2c1",
+        "r2c2",
+        "r2c3",
+        "r2c4"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r3c1",
+        "r3c2",
+        "r3c3",
+        "r3c4"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r4c1",
+        "r4c2",
+        "r4c3",
+        "r4c4"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c1",
+        "r2c1",
+        "r3c1",
+        "r4c1"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c2",
+        "r2c2",
+        "r3c2",
+        "r4c2"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c3",
+        "r2c3",
+        "r3c3",
+        "r4c3"
+      ]
+    },
+    {
+      "type": "all_different",
+      "vars": [
+        "r1c4",
+        "r2c4",
+        "r3c4",
+        "r4c4"
+      ]
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "r4c4": "d1",
+    "r3c4": "d4",
+    "r2c4": "d2",
+    "r1c4": "d3",
+    "r4c3": "d4",
+    "r3c3": "d1",
+    "r2c3": "d3",
+    "r1c3": "d2",
+    "r4c2": "d2",
+    "r3c2": "d3",
+    "r2c2": "d4",
+    "r1c2": "d1",
+    "r4c1": "d3",
+    "r3c1": "d2",
+    "r2c1": "d1",
+    "r1c1": "d4"
+  }
+}

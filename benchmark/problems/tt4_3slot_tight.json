@@ -1,0 +1,66 @@
+{
+  "id": "tt4_3slot_tight",
+  "domain": "timetabling",
+  "size": 4,
+  "variant": "tight",
+  "nl_description": "Schedule 4 courses (course1..course4) into time slots ['s1', 's2', 's3'].\nCourses that share students or a room cannot be in the same slot. Conflicting pairs:\n(course1,course2), (course1,course3), (course2,course3), (course2,course4). Forbidden course/slot placements: none. Give each course exactly one slot.",
+  "variables": [
+    "course1",
+    "course2",
+    "course3",
+    "course4"
+  ],
+  "domains": {
+    "course1": [
+      "s1",
+      "s2",
+      "s3"
+    ],
+    "course2": [
+      "s1",
+      "s2",
+      "s3"
+    ],
+    "course3": [
+      "s1",
+      "s2",
+      "s3"
+    ],
+    "course4": [
+      "s1",
+      "s2",
+      "s3"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course2"
+    },
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course4"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "course4": "s2",
+    "course2": "s1",
+    "course3": "s3",
+    "course1": "s2"
+  }
+}
