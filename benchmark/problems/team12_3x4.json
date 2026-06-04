@@ -1,0 +1,132 @@
+{
+  "id": "team12_3x4",
+  "domain": "team_assignment",
+  "size": 12,
+  "variant": "feasible",
+  "nl_description": "Assign 12 people (p1..p12) to the teams ['alpha', 'beta', 'gamma']. Each team can hold at\nmost 4 people. The following pairs must NOT be on the same team: (p1,p2), (p3,p4), (p5,p6).\nForbidden person/team placements: none. Give each person exactly one team.",
+  "variables": [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "p5",
+    "p6",
+    "p7",
+    "p8",
+    "p9",
+    "p10",
+    "p11",
+    "p12"
+  ],
+  "domains": {
+    "p1": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p2": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p3": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p4": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p5": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p6": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p7": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p8": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p9": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p10": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p11": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p12": [
+      "alpha",
+      "beta",
+      "gamma"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "alpha",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "beta",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "gamma",
+      "max": 4
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p2"
+    },
+    {
+      "type": "not_equal",
+      "a": "p3",
+      "b": "p4"
+    },
+    {
+      "type": "not_equal",
+      "a": "p5",
+      "b": "p6"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "p6": "beta",
+    "p5": "gamma",
+    "p4": "alpha",
+    "p3": "gamma",
+    "p2": "beta",
+    "p1": "alpha",
+    "p7": "beta",
+    "p8": "alpha",
+    "p9": "gamma",
+    "p10": "gamma",
+    "p11": "alpha",
+    "p12": "beta"
+  }
+}

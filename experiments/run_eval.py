@@ -20,17 +20,17 @@ import dspy
 from dotenv import load_dotenv
 
 import savanty.solver as solver_mod
-
-load_dotenv()  # pick up OLLAMA_API_KEY / SAVANTY_LLM_MODEL from a .env file if present
 from benchmark.verify import objective_value, verify
 from experiments.baselines import SYSTEMS
+
+load_dotenv()  # pick up OLLAMA_API_KEY / SAVANTY_LLM_MODEL from a .env file if present
 
 ROOT = Path(__file__).parent.parent
 PROBLEMS_DIR = ROOT / "benchmark" / "problems"
 RESULTS_DIR = ROOT / "results"
 ROWS_PATH = RESULTS_DIR / "rows.jsonl"
 
-DEFAULT_MODELS = ["gemma4:31b-cloud", "deepseek-v3.2:cloud", "qwen3.5:397b-cloud"]
+DEFAULT_MODELS = ["gemma4:31b", "deepseek-v3.2", "qwen3.5:397b"]
 
 
 def load_problems(limit: int | None) -> list[dict]:

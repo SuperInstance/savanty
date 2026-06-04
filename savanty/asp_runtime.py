@@ -27,16 +27,25 @@ class ClingoResult:
         return self.error is not None
 
 
-def run_clingo(program: str, time_limit: float | None = None) -> ClingoResult:
-    """Ground and solve an ASP program; return the (optimal, if any) model.
+SOLVE_TIME_LIMIT = 20.0  # seconds; safety net so no pathological instance stalls the eval
 
-    For optimisation programs (``#minimize``/``#maximize``) clingo enumerates improving
-    models; the last one found is optimal and ``optimal`` is set when search is exhausted.
+
+def run_clingo(program: str, time_limit: float | None = None) -> ClingoResult:
+    """Ground and solve an ASP program; return one model (optimal for optimisation).
+
+    Satisfaction programs request a single answer set (``--models=1``) — enumerating all
+    models is needless and explodes on large solution spaces. Optimisation programs
+    (``#minimize``/``#maximize``) run to exhaustion so the last (optimal) model is returned.
+    Solving is bounded by ``time_limit`` (default ``SOLVE_TIME_LIMIT``); on timeout the result
+    carries ``error`` so callers treat it as "could not decide", never as UNSAT.
     """
-    args = ["--opt-mode=opt", "--models=0"]
+    limit = time_limit if time_limit is not None else SOLVE_TIME_LIMIT
+    is_opt = "#minimize" in program or "#maximize" in program
+    # Optimisation: cap reported models — clingo reaches the optimum within a few improving
+    # steps; without a cap it enumerates every tied-optimal model (explodes under symmetry).
+    args = ["--opt-mode=opt", "--models=300"] if is_opt else ["--models=1"]
     try:
-        # Silence clingo's stderr warnings/info (e.g. "no atoms over signature"); we classify
-        # outcomes ourselves and keep batch eval output clean.
+        # Silence clingo's stderr warnings/info; we classify outcomes ourselves.
         ctl = clingo.Control(args, logger=lambda code, msg: None, message_limit=0)
         ctl.add("base", [], program)
         ctl.ground([("base", [])])
@@ -44,25 +53,28 @@ def run_clingo(program: str, time_limit: float | None = None) -> ClingoResult:
         # Syntax / grounding error (undefined operation, parse failure, ...).
         return ClingoResult(sat=False, error=str(exc))
 
-    best_symbols: list[Any] = []
-    best_cost: list[int] | None = None
-    found = False
+    best: dict[str, Any] = {"symbols": [], "cost": None, "found": False}
+
+    def on_model(model):
+        best["found"] = True
+        best["symbols"] = list(model.symbols(shown=True))
+        best["cost"] = list(model.cost) if model.cost else None
+
     try:
-        with ctl.solve(yield_=True, async_=False) as handle:
-            for model in handle:
-                found = True
-                best_symbols = list(model.symbols(shown=True))
-                best_cost = list(model.cost) if model.cost else None
-            result = handle.get()
+        handle = ctl.solve(on_model=on_model, async_=True)
+        finished = handle.wait(limit)
+        if not finished:
+            handle.cancel()
+            return ClingoResult(
+                sat=False, error=f"solve timeout after {limit:g}s", optimal=False
+            )
+        result = handle.get()
     except RuntimeError as exc:
         return ClingoResult(sat=False, error=str(exc))
 
-    return ClingoResult(
-        sat=found,
-        symbols=best_symbols,
-        cost=best_cost,
-        optimal=bool(found and result.satisfiable and result.exhausted),
-    )
+    found = best["found"]
+    optimal = bool(found and result.satisfiable and (result.exhausted or not is_opt))
+    return ClingoResult(sat=found, symbols=best["symbols"], cost=best["cost"], optimal=optimal)
 
 
 def _symbol_text(sym: Any) -> str:

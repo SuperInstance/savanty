@@ -1,0 +1,227 @@
+{
+  "id": "stress_knap18_c30",
+  "domain": "knapsack",
+  "size": 18,
+  "variant": "stress",
+  "nl_description": "A knapsack holds at most 30 units of weight. Choose a subset of the following items\nto put 'in' the knapsack (the rest stay 'out') so the total weight is within 30 and\nthe total value is as large as possible.\nItems: item1 (weight 7, value 12); item2 (weight 3, value 5); item3 (weight 9, value 15); item4 (weight 5, value 8); item5 (weight 6, value 10); item6 (weight 2, value 3); item7 (weight 8, value 13); item8 (weight 4, value 6); item9 (weight 7, value 11); item10 (weight 3, value 4); item11 (weight 5, value 9); item12 (weight 9, value 14); item13 (weight 2, value 3); item14 (weight 6, value 10); item15 (weight 8, value 12); item16 (weight 4, value 7); item17 (weight 5, value 8); item18 (weight 7, value 11).\nFor each item decide 'in' or 'out'.",
+  "variables": [
+    "item1",
+    "item2",
+    "item3",
+    "item4",
+    "item5",
+    "item6",
+    "item7",
+    "item8",
+    "item9",
+    "item10",
+    "item11",
+    "item12",
+    "item13",
+    "item14",
+    "item15",
+    "item16",
+    "item17",
+    "item18"
+  ],
+  "domains": {
+    "item1": [
+      "in",
+      "out"
+    ],
+    "item2": [
+      "in",
+      "out"
+    ],
+    "item3": [
+      "in",
+      "out"
+    ],
+    "item4": [
+      "in",
+      "out"
+    ],
+    "item5": [
+      "in",
+      "out"
+    ],
+    "item6": [
+      "in",
+      "out"
+    ],
+    "item7": [
+      "in",
+      "out"
+    ],
+    "item8": [
+      "in",
+      "out"
+    ],
+    "item9": [
+      "in",
+      "out"
+    ],
+    "item10": [
+      "in",
+      "out"
+    ],
+    "item11": [
+      "in",
+      "out"
+    ],
+    "item12": [
+      "in",
+      "out"
+    ],
+    "item13": [
+      "in",
+      "out"
+    ],
+    "item14": [
+      "in",
+      "out"
+    ],
+    "item15": [
+      "in",
+      "out"
+    ],
+    "item16": [
+      "in",
+      "out"
+    ],
+    "item17": [
+      "in",
+      "out"
+    ],
+    "item18": [
+      "in",
+      "out"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "weighted_capacity",
+      "weights": {
+        "item1": 7,
+        "item2": 3,
+        "item3": 9,
+        "item4": 5,
+        "item5": 6,
+        "item6": 2,
+        "item7": 8,
+        "item8": 4,
+        "item9": 7,
+        "item10": 3,
+        "item11": 5,
+        "item12": 9,
+        "item13": 2,
+        "item14": 6,
+        "item15": 8,
+        "item16": 4,
+        "item17": 5,
+        "item18": 7
+      },
+      "selected_value": "in",
+      "bound": 30
+    }
+  ],
+  "objective": {
+    "sense": "max",
+    "weights": {
+      "item1": {
+        "in": 12,
+        "out": 0
+      },
+      "item2": {
+        "in": 5,
+        "out": 0
+      },
+      "item3": {
+        "in": 15,
+        "out": 0
+      },
+      "item4": {
+        "in": 8,
+        "out": 0
+      },
+      "item5": {
+        "in": 10,
+        "out": 0
+      },
+      "item6": {
+        "in": 3,
+        "out": 0
+      },
+      "item7": {
+        "in": 13,
+        "out": 0
+      },
+      "item8": {
+        "in": 6,
+        "out": 0
+      },
+      "item9": {
+        "in": 11,
+        "out": 0
+      },
+      "item10": {
+        "in": 4,
+        "out": 0
+      },
+      "item11": {
+        "in": 9,
+        "out": 0
+      },
+      "item12": {
+        "in": 14,
+        "out": 0
+      },
+      "item13": {
+        "in": 3,
+        "out": 0
+      },
+      "item14": {
+        "in": 10,
+        "out": 0
+      },
+      "item15": {
+        "in": 12,
+        "out": 0
+      },
+      "item16": {
+        "in": 7,
+        "out": 0
+      },
+      "item17": {
+        "in": 8,
+        "out": 0
+      },
+      "item18": {
+        "in": 11,
+        "out": 0
+      }
+    }
+  },
+  "feasible": true,
+  "optimal_value": 51.0,
+  "_reference_witness": {
+    "item1": "in",
+    "item2": "in",
+    "item3": "in",
+    "item4": "out",
+    "item5": "out",
+    "item6": "out",
+    "item7": "out",
+    "item8": "out",
+    "item9": "out",
+    "item10": "out",
+    "item11": "in",
+    "item12": "out",
+    "item13": "out",
+    "item14": "in",
+    "item15": "out",
+    "item16": "out",
+    "item17": "out",
+    "item18": "out"
+  }
+}

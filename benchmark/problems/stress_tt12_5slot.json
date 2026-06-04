@@ -1,0 +1,196 @@
+{
+  "id": "stress_tt12_5slot",
+  "domain": "timetabling",
+  "size": 12,
+  "variant": "stress",
+  "nl_description": "Schedule 12 courses (course1..course12) into time slots ['s1', 's2', 's3', 's4', 's5'].\nCourses that share students or a room cannot be in the same slot. Conflicting pairs:\n(course1,course2), (course2,course3), (course3,course4), (course4,course5), (course5,course6), (course6,course7), (course7,course8), (course8,course9), (course9,course10), (course10,course11), (course11,course12), (course1,course3), (course2,course4), (course5,course7). Forbidden course/slot placements: none. Give each course exactly one slot.",
+  "variables": [
+    "course1",
+    "course2",
+    "course3",
+    "course4",
+    "course5",
+    "course6",
+    "course7",
+    "course8",
+    "course9",
+    "course10",
+    "course11",
+    "course12"
+  ],
+  "domains": {
+    "course1": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course2": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course3": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course4": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course5": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course6": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course7": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course8": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course9": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course10": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course11": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "course12": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course2"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course3",
+      "b": "course4"
+    },
+    {
+      "type": "not_equal",
+      "a": "course4",
+      "b": "course5"
+    },
+    {
+      "type": "not_equal",
+      "a": "course5",
+      "b": "course6"
+    },
+    {
+      "type": "not_equal",
+      "a": "course6",
+      "b": "course7"
+    },
+    {
+      "type": "not_equal",
+      "a": "course7",
+      "b": "course8"
+    },
+    {
+      "type": "not_equal",
+      "a": "course8",
+      "b": "course9"
+    },
+    {
+      "type": "not_equal",
+      "a": "course9",
+      "b": "course10"
+    },
+    {
+      "type": "not_equal",
+      "a": "course10",
+      "b": "course11"
+    },
+    {
+      "type": "not_equal",
+      "a": "course11",
+      "b": "course12"
+    },
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course4"
+    },
+    {
+      "type": "not_equal",
+      "a": "course5",
+      "b": "course7"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "course7": "s4",
+    "course5": "s3",
+    "course4": "s2",
+    "course2": "s1",
+    "course3": "s5",
+    "course1": "s4",
+    "course12": "s2",
+    "course11": "s4",
+    "course10": "s1",
+    "course9": "s5",
+    "course8": "s2",
+    "course6": "s2"
+  }
+}

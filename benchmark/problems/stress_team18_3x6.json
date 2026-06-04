@@ -1,0 +1,179 @@
+{
+  "id": "stress_team18_3x6",
+  "domain": "team_assignment",
+  "size": 18,
+  "variant": "stress",
+  "nl_description": "Assign 18 people (p1..p18) to the teams ['alpha', 'beta', 'gamma']. Each team can hold at\nmost 6 people. The following pairs must NOT be on the same team: (p1,p2), (p3,p4), (p5,p6), (p7,p8).\nForbidden person/team placements: none. Give each person exactly one team.",
+  "variables": [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "p5",
+    "p6",
+    "p7",
+    "p8",
+    "p9",
+    "p10",
+    "p11",
+    "p12",
+    "p13",
+    "p14",
+    "p15",
+    "p16",
+    "p17",
+    "p18"
+  ],
+  "domains": {
+    "p1": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p2": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p3": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p4": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p5": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p6": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p7": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p8": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p9": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p10": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p11": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p12": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p13": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p14": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p15": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p16": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p17": [
+      "alpha",
+      "beta",
+      "gamma"
+    ],
+    "p18": [
+      "alpha",
+      "beta",
+      "gamma"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "alpha",
+      "max": 6
+    },
+    {
+      "type": "capacity",
+      "value": "beta",
+      "max": 6
+    },
+    {
+      "type": "capacity",
+      "value": "gamma",
+      "max": 6
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p2"
+    },
+    {
+      "type": "not_equal",
+      "a": "p3",
+      "b": "p4"
+    },
+    {
+      "type": "not_equal",
+      "a": "p5",
+      "b": "p6"
+    },
+    {
+      "type": "not_equal",
+      "a": "p7",
+      "b": "p8"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "p8": "beta",
+    "p7": "gamma",
+    "p6": "alpha",
+    "p5": "gamma",
+    "p4": "beta",
+    "p3": "alpha",
+    "p2": "gamma",
+    "p1": "beta",
+    "p9": "beta",
+    "p10": "alpha",
+    "p11": "beta",
+    "p12": "beta",
+    "p13": "alpha",
+    "p14": "alpha",
+    "p15": "alpha",
+    "p16": "gamma",
+    "p17": "gamma",
+    "p18": "gamma"
+  }
+}

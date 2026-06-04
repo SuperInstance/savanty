@@ -65,9 +65,9 @@
   "optimal_value": null,
   "_reference_witness": {
     "n5": "c2",
-    "n4": "c1",
-    "n3": "c3",
-    "n2": "c2",
-    "n1": "c3"
+    "n4": "c3",
+    "n3": "c1",
+    "n2": "c3",
+    "n1": "c2"
   }
 }

@@ -1,0 +1,185 @@
+{
+  "id": "sched4w4d_infeasible",
+  "domain": "scheduling",
+  "size": 16,
+  "variant": "infeasible",
+  "nl_description": "Build a 4-day duty roster for 4 workers (w1..w4). For each worker\nand each day decide 'on' or 'off' (variable w<worker>_d<day>). At least 3 workers\nmust be 'on' each day. No worker may work more than 2 days in total.",
+  "variables": [
+    "w1_d1",
+    "w2_d1",
+    "w3_d1",
+    "w4_d1",
+    "w1_d2",
+    "w2_d2",
+    "w3_d2",
+    "w4_d2",
+    "w1_d3",
+    "w2_d3",
+    "w3_d3",
+    "w4_d3",
+    "w1_d4",
+    "w2_d4",
+    "w3_d4",
+    "w4_d4"
+  ],
+  "domains": {
+    "w1_d1": [
+      "on",
+      "off"
+    ],
+    "w2_d1": [
+      "on",
+      "off"
+    ],
+    "w3_d1": [
+      "on",
+      "off"
+    ],
+    "w4_d1": [
+      "on",
+      "off"
+    ],
+    "w1_d2": [
+      "on",
+      "off"
+    ],
+    "w2_d2": [
+      "on",
+      "off"
+    ],
+    "w3_d2": [
+      "on",
+      "off"
+    ],
+    "w4_d2": [
+      "on",
+      "off"
+    ],
+    "w1_d3": [
+      "on",
+      "off"
+    ],
+    "w2_d3": [
+      "on",
+      "off"
+    ],
+    "w3_d3": [
+      "on",
+      "off"
+    ],
+    "w4_d3": [
+      "on",
+      "off"
+    ],
+    "w1_d4": [
+      "on",
+      "off"
+    ],
+    "w2_d4": [
+      "on",
+      "off"
+    ],
+    "w3_d4": [
+      "on",
+      "off"
+    ],
+    "w4_d4": [
+      "on",
+      "off"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "min_count",
+      "value": "on",
+      "min": 3,
+      "vars": [
+        "w1_d1",
+        "w2_d1",
+        "w3_d1",
+        "w4_d1"
+      ]
+    },
+    {
+      "type": "min_count",
+      "value": "on",
+      "min": 3,
+      "vars": [
+        "w1_d2",
+        "w2_d2",
+        "w3_d2",
+        "w4_d2"
+      ]
+    },
+    {
+      "type": "min_count",
+      "value": "on",
+      "min": 3,
+      "vars": [
+        "w1_d3",
+        "w2_d3",
+        "w3_d3",
+        "w4_d3"
+      ]
+    },
+    {
+      "type": "min_count",
+      "value": "on",
+      "min": 3,
+      "vars": [
+        "w1_d4",
+        "w2_d4",
+        "w3_d4",
+        "w4_d4"
+      ]
+    },
+    {
+      "type": "capacity",
+      "value": "on",
+      "max": 2,
+      "vars": [
+        "w1_d1",
+        "w1_d2",
+        "w1_d3",
+        "w1_d4"
+      ]
+    },
+    {
+      "type": "capacity",
+      "value": "on",
+      "max": 2,
+      "vars": [
+        "w2_d1",
+        "w2_d2",
+        "w2_d3",
+        "w2_d4"
+      ]
+    },
+    {
+      "type": "capacity",
+      "value": "on",
+      "max": 2,
+      "vars": [
+        "w3_d1",
+        "w3_d2",
+        "w3_d3",
+        "w3_d4"
+      ]
+    },
+    {
+      "type": "capacity",
+      "value": "on",
+      "max": 2,
+      "vars": [
+        "w4_d1",
+        "w4_d2",
+        "w4_d3",
+        "w4_d4"
+      ]
+    }
+  ],
+  "objective": null,
+  "feasible": false,
+  "optimal_value": null,
+  "_reference_witness": null
+}

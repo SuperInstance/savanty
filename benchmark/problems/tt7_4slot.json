@@ -1,0 +1,104 @@
+{
+  "id": "tt7_4slot",
+  "domain": "timetabling",
+  "size": 7,
+  "variant": "feasible",
+  "nl_description": "Schedule 7 courses (course1..course7) into time slots ['s1', 's2', 's3', 's4'].\nCourses that share students or a room cannot be in the same slot. Conflicting pairs:\n(course1,course2), (course2,course3), (course3,course4), (course4,course5), (course5,course6), (course6,course7). Forbidden course/slot placements: none. Give each course exactly one slot.",
+  "variables": [
+    "course1",
+    "course2",
+    "course3",
+    "course4",
+    "course5",
+    "course6",
+    "course7"
+  ],
+  "domains": {
+    "course1": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "course2": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "course3": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "course4": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "course5": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "course6": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "course7": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course2"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course3",
+      "b": "course4"
+    },
+    {
+      "type": "not_equal",
+      "a": "course4",
+      "b": "course5"
+    },
+    {
+      "type": "not_equal",
+      "a": "course5",
+      "b": "course6"
+    },
+    {
+      "type": "not_equal",
+      "a": "course6",
+      "b": "course7"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "course7": "s4",
+    "course6": "s3",
+    "course5": "s4",
+    "course4": "s2",
+    "course3": "s3",
+    "course2": "s4",
+    "course1": "s2"
+  }
+}

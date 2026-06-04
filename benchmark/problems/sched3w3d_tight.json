@@ -119,14 +119,14 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "w1_d1": "off",
+    "w1_d1": "on",
     "w2_d1": "on",
-    "w3_d1": "on",
-    "w1_d2": "on",
-    "w2_d2": "off",
+    "w3_d1": "off",
+    "w1_d2": "off",
+    "w2_d2": "on",
     "w3_d2": "on",
     "w1_d3": "on",
-    "w2_d3": "on",
-    "w3_d3": "off"
+    "w2_d3": "off",
+    "w3_d3": "on"
   }
 }

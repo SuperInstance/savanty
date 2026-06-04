@@ -65,10 +65,10 @@
   "optimal_value": null,
   "_reference_witness": {
     "p3": "alpha",
-    "p2": "alpha",
-    "p1": "beta",
-    "p4": "alpha",
-    "p5": "beta",
+    "p2": "beta",
+    "p1": "alpha",
+    "p4": "beta",
+    "p5": "alpha",
     "p6": "beta"
   }
 }

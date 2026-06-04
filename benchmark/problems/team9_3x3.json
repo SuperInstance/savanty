@@ -93,14 +93,14 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "p4": "alpha",
+    "p4": "beta",
     "p3": "gamma",
-    "p2": "beta",
+    "p2": "alpha",
     "p1": "gamma",
-    "p5": "beta",
+    "p5": "alpha",
     "p6": "beta",
-    "p7": "alpha",
-    "p8": "alpha",
-    "p9": "gamma"
+    "p7": "beta",
+    "p8": "gamma",
+    "p9": "alpha"
   }
 }

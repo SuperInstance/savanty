@@ -82,10 +82,10 @@
   "optimal_value": null,
   "_reference_witness": {
     "course1": "s3",
-    "course6": "s3",
-    "course5": "s4",
+    "course6": "s2",
+    "course5": "s3",
     "course4": "s2",
-    "course3": "s1",
-    "course2": "s2"
+    "course3": "s3",
+    "course2": "s4"
   }
 }

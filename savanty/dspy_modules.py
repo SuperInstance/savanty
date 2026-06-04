@@ -90,9 +90,38 @@ class ProgramGeneration(dspy.Signature):
       - "optimize": a single ASP optimization directive string (e.g.
                     "#maximize { W,V,Val : assign(V,Val), objw(V,Val,W) }.") or "" if none.
     Do NOT include '#show'. Use only lowercase constant identifiers for terms.
+
+    CRITICAL: the first argument of assign/2 must be EXACTLY one of the decision-variable
+    identifiers listed in `decision_schema`, and the second argument must be one of that
+    variable's allowed values, verbatim. Do not rename, renumber, or strip prefixes (write
+    assign(g1,t1), never assign(1,t1)).
+
+    Encode EVERY requirement stated in the problem as an integrity constraint; a missing
+    constraint yields a wrong answer. Prefer #count / #sum aggregates for capacity, coverage,
+    and budget limits. Two worked examples:
+
+    Example A (graph colouring, vars n1..n3, values c1,c2,c3; n1-n2 and n2-n3 differ):
+    {"facts": ["node(n1).","node(n2).","node(n3)."],
+     "rules": ["1 { assign(N,c1); assign(N,c2); assign(N,c3) } 1 :- node(N).",
+               ":- assign(n1,C), assign(n2,C).",
+               ":- assign(n2,C), assign(n3,C)."],
+     "optimize": ""}
+
+    Example B (knapsack, vars item1,item2; values in/out; weights 5,6; capacity 10; max value):
+    {"facts": ["w(item1,5).","w(item2,6).","val(item1,10).","val(item2,12)."],
+     "rules": ["1 { assign(I,in); assign(I,out) } 1 :- w(I,_).",
+               ":- #sum{ W,I : assign(I,in), w(I,W) } > 10."],
+     "optimize": "#maximize{ V,I : assign(I,in), val(I,V) }."}
     """
 
-    analysis = dspy.InputField(desc="Structured analysis of an optimization problem")
+    problem_description = dspy.InputField(
+        desc="The full original natural-language problem (use it; do not rely on the analysis alone)"
+    )
+    analysis = dspy.InputField(desc="Structured analysis of the problem (supporting detail)")
+    decision_schema = dspy.InputField(
+        desc="The exact decision-variable identifiers and their allowed values that assign/2 "
+        "must range over"
+    )
     program_components = dspy.OutputField(
         desc='STRICT JSON: {"facts": [...], "rules": [...], "optimize": "..."} using the '
         "assign(Var,Value) contract described above"
@@ -119,6 +148,9 @@ class ASPRepair(dspy.Signature):
     """
 
     problem_description = dspy.InputField(desc="The natural-language problem to model")
+    decision_schema = dspy.InputField(
+        desc="The exact decision-variable identifiers and allowed values assign/2 must use"
+    )
     current_program_components = dspy.InputField(
         desc='The current encoding as JSON {"facts":[...],"rules":[...],"optimize":"..."}'
     )
@@ -140,6 +172,9 @@ class ASPRepairGeneric(dspy.Signature):
     """
 
     problem_description = dspy.InputField(desc="The natural-language problem to model")
+    decision_schema = dspy.InputField(
+        desc="The exact decision-variable identifiers and allowed values assign/2 must use"
+    )
     current_program_components = dspy.InputField(
         desc='The current encoding as JSON {"facts":[...],"rules":[...],"optimize":"..."}'
     )
@@ -193,7 +228,7 @@ class InteractiveProblemSolver(dspy.Module):
         self.generate = dspy.Predict(ProgramGeneration)
         self.refine = dspy.Predict(ProblemRefinement)
 
-    def forward(self, problem_description: str, additional_info: str = None):
+    def forward(self, problem_description: str, additional_info: str = None, decision_schema: str = ""):
         # If we have additional info, refine the problem first
         if additional_info:
             refinement = self.refine(
@@ -223,8 +258,12 @@ class InteractiveProblemSolver(dspy.Module):
         # Analyze the problem
         analysis = self.analyze(problem_description=problem_description)
 
-        # Generate program components
-        program = self.generate(analysis=analysis.analysis)
+        # Generate program components (give the generator the full problem, not just analysis)
+        program = self.generate(
+            problem_description=problem_description,
+            analysis=analysis.analysis,
+            decision_schema=decision_schema,
+        )
 
         return dspy.Prediction(
             validation=validation, analysis=analysis, program=program, needs_more_info=False

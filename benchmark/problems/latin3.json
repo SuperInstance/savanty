@@ -116,14 +116,14 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "r3c3": "d1",
+    "r3c3": "d2",
     "r2c3": "d3",
-    "r1c3": "d2",
+    "r1c3": "d1",
     "r3c2": "d3",
-    "r2c2": "d2",
-    "r1c2": "d1",
-    "r3c1": "d2",
-    "r2c1": "d1",
+    "r2c2": "d1",
+    "r1c2": "d2",
+    "r3c1": "d1",
+    "r2c1": "d2",
     "r1c1": "d3"
   }
 }

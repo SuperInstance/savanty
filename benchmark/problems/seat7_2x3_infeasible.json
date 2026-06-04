@@ -1,0 +1,62 @@
+{
+  "id": "seat7_2x3_infeasible",
+  "domain": "seating",
+  "size": 7,
+  "variant": "infeasible",
+  "nl_description": "Seat 7 guests (g1..g7) at tables ['t1', 't2'], each seating at most 3.\nThese pairs must sit at the SAME table: none. These pairs must sit at DIFFERENT\ntables: none. Assign every guest to exactly one table.",
+  "variables": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g6",
+    "g7"
+  ],
+  "domains": {
+    "g1": [
+      "t1",
+      "t2"
+    ],
+    "g2": [
+      "t1",
+      "t2"
+    ],
+    "g3": [
+      "t1",
+      "t2"
+    ],
+    "g4": [
+      "t1",
+      "t2"
+    ],
+    "g5": [
+      "t1",
+      "t2"
+    ],
+    "g6": [
+      "t1",
+      "t2"
+    ],
+    "g7": [
+      "t1",
+      "t2"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "t1",
+      "max": 3
+    },
+    {
+      "type": "capacity",
+      "value": "t2",
+      "max": 3
+    }
+  ],
+  "objective": null,
+  "feasible": false,
+  "optimal_value": null,
+  "_reference_witness": null
+}

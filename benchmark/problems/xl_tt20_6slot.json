@@ -1,0 +1,328 @@
+{
+  "id": "xl_tt20_6slot",
+  "domain": "timetabling",
+  "size": 20,
+  "variant": "xl",
+  "nl_description": "Schedule 20 courses (course1..course20) into time slots ['s1', 's2', 's3', 's4', 's5', 's6'].\nCourses that share students or a room cannot be in the same slot. Conflicting pairs:\n(course1,course2), (course2,course3), (course3,course4), (course4,course5), (course5,course6), (course6,course7), (course7,course8), (course8,course9), (course9,course10), (course10,course11), (course11,course12), (course12,course13), (course13,course14), (course14,course15), (course15,course16), (course16,course17), (course17,course18), (course18,course19), (course19,course20), (course1,course3), (course2,course5), (course4,course7). Forbidden course/slot placements: none. Give each course exactly one slot.",
+  "variables": [
+    "course1",
+    "course2",
+    "course3",
+    "course4",
+    "course5",
+    "course6",
+    "course7",
+    "course8",
+    "course9",
+    "course10",
+    "course11",
+    "course12",
+    "course13",
+    "course14",
+    "course15",
+    "course16",
+    "course17",
+    "course18",
+    "course19",
+    "course20"
+  ],
+  "domains": {
+    "course1": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course2": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course3": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course4": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course5": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course6": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course7": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course8": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course9": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course10": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course11": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course12": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course13": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course14": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course15": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course16": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course17": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course18": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course19": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "course20": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course2"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course3",
+      "b": "course4"
+    },
+    {
+      "type": "not_equal",
+      "a": "course4",
+      "b": "course5"
+    },
+    {
+      "type": "not_equal",
+      "a": "course5",
+      "b": "course6"
+    },
+    {
+      "type": "not_equal",
+      "a": "course6",
+      "b": "course7"
+    },
+    {
+      "type": "not_equal",
+      "a": "course7",
+      "b": "course8"
+    },
+    {
+      "type": "not_equal",
+      "a": "course8",
+      "b": "course9"
+    },
+    {
+      "type": "not_equal",
+      "a": "course9",
+      "b": "course10"
+    },
+    {
+      "type": "not_equal",
+      "a": "course10",
+      "b": "course11"
+    },
+    {
+      "type": "not_equal",
+      "a": "course11",
+      "b": "course12"
+    },
+    {
+      "type": "not_equal",
+      "a": "course12",
+      "b": "course13"
+    },
+    {
+      "type": "not_equal",
+      "a": "course13",
+      "b": "course14"
+    },
+    {
+      "type": "not_equal",
+      "a": "course14",
+      "b": "course15"
+    },
+    {
+      "type": "not_equal",
+      "a": "course15",
+      "b": "course16"
+    },
+    {
+      "type": "not_equal",
+      "a": "course16",
+      "b": "course17"
+    },
+    {
+      "type": "not_equal",
+      "a": "course17",
+      "b": "course18"
+    },
+    {
+      "type": "not_equal",
+      "a": "course18",
+      "b": "course19"
+    },
+    {
+      "type": "not_equal",
+      "a": "course19",
+      "b": "course20"
+    },
+    {
+      "type": "not_equal",
+      "a": "course1",
+      "b": "course3"
+    },
+    {
+      "type": "not_equal",
+      "a": "course2",
+      "b": "course5"
+    },
+    {
+      "type": "not_equal",
+      "a": "course4",
+      "b": "course7"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "course7": "s4",
+    "course4": "s6",
+    "course5": "s2",
+    "course2": "s1",
+    "course3": "s4",
+    "course1": "s2",
+    "course20": "s3",
+    "course19": "s1",
+    "course18": "s2",
+    "course17": "s1",
+    "course16": "s2",
+    "course15": "s1",
+    "course14": "s2",
+    "course13": "s4",
+    "course12": "s2",
+    "course11": "s3",
+    "course10": "s1",
+    "course9": "s5",
+    "course8": "s2",
+    "course6": "s1"
+  }
+}

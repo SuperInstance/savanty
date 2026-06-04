@@ -164,3 +164,8 @@ venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# eval intermediates
+results/rows_misscored*.jsonl
+results/rows_v2*.jsonl
+experiments/cache/

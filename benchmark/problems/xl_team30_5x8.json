@@ -1,0 +1,333 @@
+{
+  "id": "xl_team30_5x8",
+  "domain": "team_assignment",
+  "size": 30,
+  "variant": "xl",
+  "nl_description": "Assign 30 people (p1..p30) to the teams ['grp1', 'grp2', 'grp3', 'grp4', 'grp5']. Each team can hold at\nmost 8 people. The following pairs must NOT be on the same team: (p1,p2), (p3,p4), (p5,p6), (p7,p8).\nForbidden person/team placements: none. Give each person exactly one team.",
+  "variables": [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "p5",
+    "p6",
+    "p7",
+    "p8",
+    "p9",
+    "p10",
+    "p11",
+    "p12",
+    "p13",
+    "p14",
+    "p15",
+    "p16",
+    "p17",
+    "p18",
+    "p19",
+    "p20",
+    "p21",
+    "p22",
+    "p23",
+    "p24",
+    "p25",
+    "p26",
+    "p27",
+    "p28",
+    "p29",
+    "p30"
+  ],
+  "domains": {
+    "p1": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p2": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p3": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p4": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p5": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p6": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p7": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p8": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p9": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p10": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p11": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p12": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p13": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p14": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p15": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p16": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p17": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p18": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p19": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p20": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p21": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p22": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p23": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p24": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p25": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p26": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p27": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p28": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p29": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ],
+    "p30": [
+      "grp1",
+      "grp2",
+      "grp3",
+      "grp4",
+      "grp5"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "grp1",
+      "max": 8
+    },
+    {
+      "type": "capacity",
+      "value": "grp2",
+      "max": 8
+    },
+    {
+      "type": "capacity",
+      "value": "grp3",
+      "max": 8
+    },
+    {
+      "type": "capacity",
+      "value": "grp4",
+      "max": 8
+    },
+    {
+      "type": "capacity",
+      "value": "grp5",
+      "max": 8
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p2"
+    },
+    {
+      "type": "not_equal",
+      "a": "p3",
+      "b": "p4"
+    },
+    {
+      "type": "not_equal",
+      "a": "p5",
+      "b": "p6"
+    },
+    {
+      "type": "not_equal",
+      "a": "p7",
+      "b": "p8"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "p8": "grp3",
+    "p7": "grp1",
+    "p6": "grp1",
+    "p5": "grp2",
+    "p4": "grp1",
+    "p3": "grp3",
+    "p2": "grp1",
+    "p1": "grp3",
+    "p9": "grp5",
+    "p10": "grp5",
+    "p11": "grp1",
+    "p12": "grp5",
+    "p13": "grp4",
+    "p14": "grp5",
+    "p15": "grp4",
+    "p16": "grp4",
+    "p17": "grp4",
+    "p18": "grp4",
+    "p19": "grp5",
+    "p20": "grp4",
+    "p21": "grp1",
+    "p22": "grp2",
+    "p23": "grp1",
+    "p24": "grp2",
+    "p25": "grp1",
+    "p26": "grp5",
+    "p27": "grp4",
+    "p28": "grp4",
+    "p29": "grp3",
+    "p30": "grp3"
+  }
+}

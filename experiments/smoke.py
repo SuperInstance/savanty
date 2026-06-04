@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-WANT = ["gemma4:31b-cloud", "deepseek-v3.2:cloud", "qwen3.5:397b-cloud"]
+WANT = ["gemma4:31b", "deepseek-v3.2", "qwen3.5:397b"]
 
 
 def list_models() -> list[str]:
@@ -39,8 +39,7 @@ def main() -> None:
         available = list_models()
         print(f"/api/tags returned {len(available)} models")
         for w in WANT:
-            base = w.replace(":cloud", "")
-            hit = any(w == a or base in (a or "") for a in available)
+            hit = any(w == a for a in available)
             print(f"  {'OK ' if hit else 'MISSING'} {w}")
     except Exception as e:  # noqa: BLE001
         print(f"/api/tags check failed (continuing to chat test): {e}")

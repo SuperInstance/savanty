@@ -1,0 +1,98 @@
+{
+  "id": "team10_2x5",
+  "domain": "team_assignment",
+  "size": 10,
+  "variant": "feasible",
+  "nl_description": "Assign 10 people (p1..p10) to the teams ['alpha', 'beta']. Each team can hold at\nmost 5 people. The following pairs must NOT be on the same team: (p1,p2), (p3,p4).\nForbidden person/team placements: none. Give each person exactly one team.",
+  "variables": [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "p5",
+    "p6",
+    "p7",
+    "p8",
+    "p9",
+    "p10"
+  ],
+  "domains": {
+    "p1": [
+      "alpha",
+      "beta"
+    ],
+    "p2": [
+      "alpha",
+      "beta"
+    ],
+    "p3": [
+      "alpha",
+      "beta"
+    ],
+    "p4": [
+      "alpha",
+      "beta"
+    ],
+    "p5": [
+      "alpha",
+      "beta"
+    ],
+    "p6": [
+      "alpha",
+      "beta"
+    ],
+    "p7": [
+      "alpha",
+      "beta"
+    ],
+    "p8": [
+      "alpha",
+      "beta"
+    ],
+    "p9": [
+      "alpha",
+      "beta"
+    ],
+    "p10": [
+      "alpha",
+      "beta"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "alpha",
+      "max": 5
+    },
+    {
+      "type": "capacity",
+      "value": "beta",
+      "max": 5
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p2"
+    },
+    {
+      "type": "not_equal",
+      "a": "p3",
+      "b": "p4"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "p4": "beta",
+    "p3": "alpha",
+    "p2": "beta",
+    "p1": "alpha",
+    "p5": "beta",
+    "p6": "alpha",
+    "p7": "alpha",
+    "p8": "beta",
+    "p9": "alpha",
+    "p10": "beta"
+  }
+}

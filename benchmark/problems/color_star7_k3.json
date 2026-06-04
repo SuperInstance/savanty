@@ -86,12 +86,12 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "n7": "c3",
-    "n1": "c1",
-    "n6": "c2",
-    "n5": "c2",
-    "n4": "c3",
-    "n3": "c3",
-    "n2": "c2"
+    "n7": "c2",
+    "n1": "c3",
+    "n6": "c1",
+    "n5": "c1",
+    "n4": "c1",
+    "n3": "c1",
+    "n2": "c1"
   }
 }

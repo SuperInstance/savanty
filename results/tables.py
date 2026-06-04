@@ -35,7 +35,7 @@ SYSTEM_LABEL = {
 def load_rows() -> list[dict]:
     if not ROWS_PATH.exists():
         raise SystemExit(f"No rows at {ROWS_PATH}; run experiments.run_eval first.")
-    return [json.loads(l) for l in ROWS_PATH.read_text().splitlines() if l.strip()]
+    return [json.loads(ln) for ln in ROWS_PATH.read_text().splitlines() if ln.strip()]
 
 
 def _mean(xs):
@@ -160,17 +160,48 @@ def write_tex(overall):
     (RESULTS_DIR / "tables.tex").write_text(tex)
 
 
+def aggregate_by_variant(rows):
+    """Feasibility accuracy per (system, variant) — shows where the core helps."""
+    groups = defaultdict(list)
+    for r in rows:
+        groups[(r["system"], r["variant"])].append(r)
+    return {k: _mean([r["feasible_correct"] for r in rs]) for k, rs in groups.items()}
+
+
+def write_variant_tex(by_variant):
+    variants = ["feasible", "tight", "infeasible"]
+    head = " & ".join(v.capitalize() for v in variants)
+    rows = []
+    for s in SYSTEM_ORDER:
+        cells = " & ".join(fmt(by_variant.get((s, v), float("nan")), 1) for v in variants)
+        rows.append(f"{SYSTEM_LABEL[s]} & {cells} \\\\")
+    tex = (
+        "\\begin{tabular}{lrrr}\n\\toprule\n"
+        f"System & {head} \\\\\n\\midrule\n" + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n"
+    )
+    (RESULTS_DIR / "tables_variant.tex").write_text(tex)
+
+
 def main():
     rows = load_rows()
     overall = aggregate(rows, by_model=False)
     by_model = aggregate(rows, by_model=True)
+    by_variant = aggregate_by_variant(rows)
     sig = paired_mcnemar_like(rows)
     write_csv(by_model)
     write_tex(overall)
+    write_variant_tex(by_variant)
     txt = summary_text(overall, sig)
     (RESULTS_DIR / "summary.txt").write_text(txt)
     print(txt)
-    print(f"\nWrote metrics.csv, summary.txt, tables.tex to {RESULTS_DIR}")
+    print("\n=== Feasibility accuracy by variant (%) ===")
+    for s in SYSTEM_ORDER:
+        cells = "  ".join(
+            f"{v}={fmt(by_variant.get((s, v), float('nan')), 1)}"
+            for v in ("feasible", "tight", "infeasible")
+        )
+        print(f"  {SYSTEM_LABEL[s]:<24} {cells}")
+    print(f"\nWrote metrics.csv, summary.txt, tables.tex, tables_variant.tex to {RESULTS_DIR}")
 
 
 if __name__ == "__main__":

@@ -120,7 +120,7 @@ def test_repair_loop_terminates_and_reports_infeasible(mock_validate, _mock_suit
     mock_validate.return_value = _triangle(2)
     repair_calls = {"n": 0}
 
-    def fake_repair(problem_description, components, outcome, repair_mode):
+    def fake_repair(problem_description, components, outcome, repair_mode, decision_schema=""):
         repair_calls["n"] += 1
         return _triangle(2), "stay unsat"  # repair never fixes it
 
@@ -149,7 +149,7 @@ def test_norepair_single_attempt(mock_validate, _mock_suit):
 def test_repair_fixes_on_second_try(mock_validate, _mock_suit):
     mock_validate.return_value = _triangle(2)  # starts unsat
 
-    def fake_repair(problem_description, components, outcome, repair_mode):
+    def fake_repair(problem_description, components, outcome, repair_mode, decision_schema=""):
         return _triangle(3), "added a colour"  # repair makes it solvable
 
     with patch("savanty.solver._repair", side_effect=fake_repair):

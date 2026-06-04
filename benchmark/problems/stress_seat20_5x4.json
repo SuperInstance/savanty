@@ -1,0 +1,248 @@
+{
+  "id": "stress_seat20_5x4",
+  "domain": "seating",
+  "size": 20,
+  "variant": "stress",
+  "nl_description": "Seat 20 guests (g1..g20) at tables ['t1', 't2', 't3', 't4', 't5'], each seating at most 4.\nThese pairs must sit at the SAME table: (g1,g2), (g3,g4), (g5,g6). These pairs must sit at DIFFERENT\ntables: (g1,g7), (g2,g8). Assign every guest to exactly one table.",
+  "variables": [
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g6",
+    "g7",
+    "g8",
+    "g9",
+    "g10",
+    "g11",
+    "g12",
+    "g13",
+    "g14",
+    "g15",
+    "g16",
+    "g17",
+    "g18",
+    "g19",
+    "g20"
+  ],
+  "domains": {
+    "g1": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g2": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g3": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g4": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g5": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g6": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g7": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g8": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g9": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g10": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g11": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g12": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g13": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g14": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g15": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g16": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g17": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g18": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g19": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ],
+    "g20": [
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "t1",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "t2",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "t3",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "t4",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "t5",
+      "max": 4
+    },
+    {
+      "type": "equal",
+      "a": "g1",
+      "b": "g2"
+    },
+    {
+      "type": "equal",
+      "a": "g3",
+      "b": "g4"
+    },
+    {
+      "type": "equal",
+      "a": "g5",
+      "b": "g6"
+    },
+    {
+      "type": "not_equal",
+      "a": "g1",
+      "b": "g7"
+    },
+    {
+      "type": "not_equal",
+      "a": "g2",
+      "b": "g8"
+    }
+  ],
+  "objective": null,
+  "feasible": true,
+  "optimal_value": null,
+  "_reference_witness": {
+    "g8": "t1",
+    "g2": "t3",
+    "g7": "t2",
+    "g1": "t3",
+    "g6": "t3",
+    "g5": "t3",
+    "g4": "t2",
+    "g3": "t2",
+    "g9": "t1",
+    "g10": "t4",
+    "g11": "t4",
+    "g12": "t1",
+    "g13": "t4",
+    "g14": "t4",
+    "g15": "t1",
+    "g16": "t5",
+    "g17": "t2",
+    "g18": "t5",
+    "g19": "t5",
+    "g20": "t5"
+  }
+}

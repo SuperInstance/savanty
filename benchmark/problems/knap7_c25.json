@@ -1,0 +1,106 @@
+{
+  "id": "knap7_c25",
+  "domain": "knapsack",
+  "size": 7,
+  "variant": "feasible",
+  "nl_description": "A knapsack holds at most 25 units of weight. Choose a subset of the following items\nto put 'in' the knapsack (the rest stay 'out') so the total weight is within 25 and\nthe total value is as large as possible.\nItems: item1 (weight 7, value 12); item2 (weight 3, value 5); item3 (weight 9, value 15); item4 (weight 5, value 8); item5 (weight 6, value 10); item6 (weight 2, value 3); item7 (weight 8, value 13).\nFor each item decide 'in' or 'out'.",
+  "variables": [
+    "item1",
+    "item2",
+    "item3",
+    "item4",
+    "item5",
+    "item6",
+    "item7"
+  ],
+  "domains": {
+    "item1": [
+      "in",
+      "out"
+    ],
+    "item2": [
+      "in",
+      "out"
+    ],
+    "item3": [
+      "in",
+      "out"
+    ],
+    "item4": [
+      "in",
+      "out"
+    ],
+    "item5": [
+      "in",
+      "out"
+    ],
+    "item6": [
+      "in",
+      "out"
+    ],
+    "item7": [
+      "in",
+      "out"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "weighted_capacity",
+      "weights": {
+        "item1": 7,
+        "item2": 3,
+        "item3": 9,
+        "item4": 5,
+        "item5": 6,
+        "item6": 2,
+        "item7": 8
+      },
+      "selected_value": "in",
+      "bound": 25
+    }
+  ],
+  "objective": {
+    "sense": "max",
+    "weights": {
+      "item1": {
+        "in": 12,
+        "out": 0
+      },
+      "item2": {
+        "in": 5,
+        "out": 0
+      },
+      "item3": {
+        "in": 15,
+        "out": 0
+      },
+      "item4": {
+        "in": 8,
+        "out": 0
+      },
+      "item5": {
+        "in": 10,
+        "out": 0
+      },
+      "item6": {
+        "in": 3,
+        "out": 0
+      },
+      "item7": {
+        "in": 13,
+        "out": 0
+      }
+    }
+  },
+  "feasible": true,
+  "optimal_value": 42.0,
+  "_reference_witness": {
+    "item1": "in",
+    "item2": "in",
+    "item3": "in",
+    "item4": "out",
+    "item5": "in",
+    "item6": "out",
+    "item7": "out"
+  }
+}

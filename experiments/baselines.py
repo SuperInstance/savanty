@@ -103,6 +103,8 @@ def _run_savanty(spec: dict, enable_repair: bool, repair_mode: str) -> SystemOut
         enable_repair=enable_repair,
         max_repair_iters=3,
         repair_mode=repair_mode,
+        variables=spec["variables"],
+        domains=spec["domains"],
     )
     if res.error and not res.infeasible:
         return SystemOutput(

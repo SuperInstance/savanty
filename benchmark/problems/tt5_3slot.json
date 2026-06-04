@@ -59,10 +59,10 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "course5": "wed",
-    "course4": "mon",
-    "course3": "wed",
-    "course2": "mon",
-    "course1": "tue"
+    "course5": "mon",
+    "course4": "tue",
+    "course3": "mon",
+    "course2": "wed",
+    "course1": "mon"
   }
 }

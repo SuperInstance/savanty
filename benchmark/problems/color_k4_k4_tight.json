@@ -72,9 +72,9 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "n4": "c1",
-    "n3": "c2",
-    "n2": "c3",
+    "n4": "c2",
+    "n3": "c3",
+    "n2": "c1",
     "n1": "c4"
   }
 }

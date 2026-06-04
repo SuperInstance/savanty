@@ -1,0 +1,82 @@
+{
+  "id": "team8_2x4_sep_infeasible",
+  "domain": "team_assignment",
+  "size": 8,
+  "variant": "infeasible",
+  "nl_description": "Assign 8 people (p1..p8) to the teams ['alpha', 'beta']. Each team can hold at\nmost 4 people. The following pairs must NOT be on the same team: (p1,p2), (p1,p3), (p2,p3).\nForbidden person/team placements: none. Give each person exactly one team.",
+  "variables": [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "p5",
+    "p6",
+    "p7",
+    "p8"
+  ],
+  "domains": {
+    "p1": [
+      "alpha",
+      "beta"
+    ],
+    "p2": [
+      "alpha",
+      "beta"
+    ],
+    "p3": [
+      "alpha",
+      "beta"
+    ],
+    "p4": [
+      "alpha",
+      "beta"
+    ],
+    "p5": [
+      "alpha",
+      "beta"
+    ],
+    "p6": [
+      "alpha",
+      "beta"
+    ],
+    "p7": [
+      "alpha",
+      "beta"
+    ],
+    "p8": [
+      "alpha",
+      "beta"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "capacity",
+      "value": "alpha",
+      "max": 4
+    },
+    {
+      "type": "capacity",
+      "value": "beta",
+      "max": 4
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p2"
+    },
+    {
+      "type": "not_equal",
+      "a": "p1",
+      "b": "p3"
+    },
+    {
+      "type": "not_equal",
+      "a": "p2",
+      "b": "p3"
+    }
+  ],
+  "objective": null,
+  "feasible": false,
+  "optimal_value": null,
+  "_reference_witness": null
+}

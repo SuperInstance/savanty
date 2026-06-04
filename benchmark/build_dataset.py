@@ -28,7 +28,7 @@ def build(write: bool = True) -> list[dict]:
         variant = spec["variant"]
         if variant == "infeasible" and gt["feasible"]:
             mismatches.append(f"{spec['id']}: labelled infeasible but a solution exists")
-        if variant in ("feasible", "tight") and not gt["feasible"]:
+        if variant in ("feasible", "tight", "stress", "xl") and not gt["feasible"]:
             mismatches.append(f"{spec['id']}: labelled {variant} but is infeasible")
         labelled.append(spec)
 

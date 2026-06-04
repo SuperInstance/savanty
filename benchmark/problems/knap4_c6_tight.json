@@ -1,0 +1,73 @@
+{
+  "id": "knap4_c6_tight",
+  "domain": "knapsack",
+  "size": 4,
+  "variant": "tight",
+  "nl_description": "A knapsack holds at most 6 units of weight. Choose a subset of the following items\nto put 'in' the knapsack (the rest stay 'out') so the total weight is within 6 and\nthe total value is as large as possible.\nItems: item1 (weight 5, value 10); item2 (weight 4, value 7); item3 (weight 6, value 12); item4 (weight 2, value 3).\nFor each item decide 'in' or 'out'.",
+  "variables": [
+    "item1",
+    "item2",
+    "item3",
+    "item4"
+  ],
+  "domains": {
+    "item1": [
+      "in",
+      "out"
+    ],
+    "item2": [
+      "in",
+      "out"
+    ],
+    "item3": [
+      "in",
+      "out"
+    ],
+    "item4": [
+      "in",
+      "out"
+    ]
+  },
+  "constraints": [
+    {
+      "type": "weighted_capacity",
+      "weights": {
+        "item1": 5,
+        "item2": 4,
+        "item3": 6,
+        "item4": 2
+      },
+      "selected_value": "in",
+      "bound": 6
+    }
+  ],
+  "objective": {
+    "sense": "max",
+    "weights": {
+      "item1": {
+        "in": 10,
+        "out": 0
+      },
+      "item2": {
+        "in": 7,
+        "out": 0
+      },
+      "item3": {
+        "in": 12,
+        "out": 0
+      },
+      "item4": {
+        "in": 3,
+        "out": 0
+      }
+    }
+  },
+  "feasible": true,
+  "optimal_value": 12.0,
+  "_reference_witness": {
+    "item1": "out",
+    "item2": "out",
+    "item3": "in",
+    "item4": "out"
+  }
+}

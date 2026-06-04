@@ -31,7 +31,7 @@ from savanty.logging_config import logger
 _lm_instance = None
 
 OLLAMA_BASE_URL = "https://ollama.com/v1"
-DEFAULT_OLLAMA_MODEL = "gemma4:31b-cloud"
+DEFAULT_OLLAMA_MODEL = "gemma4:31b"
 
 
 class ConfigurationError(Exception):
@@ -54,13 +54,16 @@ def _get_configured_lm():
         # DSPy/LiteLLM "openai/<model>" provider routed at Ollama's OpenAI-compatible endpoint.
         lm_id = model if model.startswith("openai/") else f"openai/{model}"
         logger.debug(f"Configuring Ollama Cloud LM: {lm_id} @ {OLLAMA_BASE_URL}")
+        # Reasoning models (qwen3.5, deepseek-v3.2) emit long reasoning before the answer;
+        # a small completion budget truncates them mid-thought and yields empty output.
+        max_tokens = int(os.getenv("SAVANTY_MAX_TOKENS", "16000"))
         return dspy.LM(
             lm_id,
             api_key=ollama_key,
             api_base=OLLAMA_BASE_URL,
             model_type="chat",
             temperature=0.0,
-            max_tokens=4000,
+            max_tokens=max_tokens,
         )
 
     openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -265,13 +268,44 @@ def check_problem_suitability(problem_description: str) -> dict:
     }
 
 
-def validate_and_parse_problem(description: str, additional_info: str = None) -> dict[str, Any]:
+def build_decision_schema(variables=None, domains=None) -> str:
+    """Render the exact assign/2 namespace (variable ids + allowed values) for the LLM.
+
+    All systems (Savanty and the LLM baselines) are given this same template, so the
+    comparison is fair and every produced assignment lands in one canonical namespace.
+    """
+    if not variables:
+        return (
+            "Use the decision-variable identifiers exactly as they appear in the problem text "
+            "(do not rename or renumber them) as the first argument of assign/2."
+        )
+    doms = domains or {}
+    uniq = {tuple(v) for v in doms.values()} if doms else set()
+    if len(uniq) == 1:
+        allowed = "all variables take one of: " + ", ".join(map(str, next(iter(uniq))))
+    elif doms:
+        allowed = "; ".join(f"{k}: {{{', '.join(map(str, v))}}}" for k, v in doms.items())
+    else:
+        allowed = "as stated in the problem"
+    return (
+        "Decision variables (use these EXACT identifiers as the first argument of assign/2): "
+        f"{', '.join(variables)}. Allowed values (second argument): {allowed}."
+    )
+
+
+def validate_and_parse_problem(
+    description: str, additional_info: str = None, decision_schema: str = ""
+) -> dict[str, Any]:
     """Validate and parse the problem into ASP components {facts, rules, optimize}."""
     _ensure_lm_configured()
     logger.debug("Validating and parsing problem")
     solver = InteractiveProblemSolver()
     try:
-        result = solver.forward(problem_description=description, additional_info=additional_info)
+        result = solver(
+            problem_description=description,
+            additional_info=additional_info,
+            decision_schema=decision_schema,
+        )
         if result.needs_more_info:
             raise ValueError("NEEDS_MORE_INFO:" + json.dumps(result.questions))
         return _parse_components(result.program.program_components)
@@ -302,19 +336,21 @@ def _parse_components(raw: str) -> dict[str, Any]:
     }
 
 
-def _repair(problem_description, components, outcome, repair_mode):
+def _repair(problem_description, components, outcome, repair_mode, decision_schema=""):
     """Invoke the LLM repair step, returning new components (or raises ValueError)."""
     feedback = _build_feedback(outcome, repair_mode)
     current = json.dumps(components)
     if repair_mode == "generic":
         pred = dspy.Predict(ASPRepairGeneric)(
             problem_description=problem_description,
+            decision_schema=decision_schema,
             current_program_components=current,
             solver_feedback=feedback,
         )
     else:
         pred = dspy.Predict(ASPRepair)(
             problem_description=problem_description,
+            decision_schema=decision_schema,
             current_program_components=current,
             failure_type=outcome.failure_type,
             solver_feedback=feedback,
@@ -328,13 +364,18 @@ def solve_optimization_problem(
     enable_repair: bool = True,
     max_repair_iters: int = 3,
     repair_mode: str = "typed_core",
+    variables=None,
+    domains=None,
 ) -> ProblemSolverResult:
     """Solve a problem from its description.
 
     repair_mode: "typed_core" (ours — typed feedback + minimal UNSAT core) or
                  "generic" (Logic-LM-style — raw solver message only).
+    variables/domains: optional decision-variable template (ids + allowed values) that the
+                 generated assign/2 atoms must use; given identically to all baselines.
     """
     logger.info("Starting optimization problem solving")
+    decision_schema = build_decision_schema(variables, domains)
     try:
         suitability = check_problem_suitability(problem_description)
         if suitability["is_suitable"] == "no":
@@ -346,7 +387,9 @@ def solve_optimization_problem(
                 error=f"This problem is better suited for a different tool. {suitability['reasoning']}",
             )
 
-        components = validate_and_parse_problem(problem_description, additional_info)
+        components = validate_and_parse_problem(
+            problem_description, additional_info, decision_schema
+        )
 
         repair_trace: list[dict] = []
         outcome = compile_and_solve(components)
@@ -354,7 +397,7 @@ def solve_optimization_problem(
         while enable_repair and outcome.failure_type != "ok" and iters < max_repair_iters:
             try:
                 new_components, feedback = _repair(
-                    problem_description, components, outcome, repair_mode
+                    problem_description, components, outcome, repair_mode, decision_schema
                 )
             except Exception as e:  # repair generation failed; stop looping
                 logger.warning(f"Repair step failed: {e}")

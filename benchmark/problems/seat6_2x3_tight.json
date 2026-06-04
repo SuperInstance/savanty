@@ -69,11 +69,11 @@
   "feasible": true,
   "optimal_value": null,
   "_reference_witness": {
-    "g5": "t2",
-    "g1": "t1",
-    "g4": "t2",
-    "g3": "t2",
-    "g2": "t1",
-    "g6": "t1"
+    "g5": "t1",
+    "g1": "t2",
+    "g4": "t1",
+    "g3": "t1",
+    "g2": "t2",
+    "g6": "t2"
   }
 }
