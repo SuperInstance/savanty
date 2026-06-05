@@ -1,10 +1,10 @@
 site_name: Savanty Documentation
 site_description: AI-powered optimization solver - Describe problems in plain English, get guaranteed optimal solutions
 site_author: Dipankar Sarkar
-site_url: https://docs.skelfresearch.com/savanty
+site_url: https://docs.skelfresearch.com/savanty/
 
-repo_name: skelf-research/savanty
-repo_url: https://github.com/skelf-research/savanty
+repo_name: Skelf-Research/savanty
+repo_url: https://github.com/Skelf-Research/savanty
 edit_uri: edit/main/documentation/docs/
 
 theme:
