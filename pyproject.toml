@@ -1,6 +1,6 @@
 [project]
 name = "savanty"
-version = "0.2.1"
+version = "0.3.0"
 description = "AI agent that turns vague planning problems into optimal solutions"
 authors = [{ name = "Dipankar Sarkar", email = "me@dipankar.name" }]
 readme = "README.md"

@@ -6,6 +6,16 @@ when clingo reports a failure, the solver builds *typed, localized* diagnostics 
 **minimal unsatisfiable core** over the model's own constraints — and asks the LLM to repair the
 encoding. A ``generic`` repair mode (raw error message only) reproduces Logic-LM-style refinement
 as a baseline.
+
+The solver is now a **topologically-aware constraint engine**: after each ASP result, optional
+post-processing applies:
+
+1. **TernaryL Gate** — maps solver conviction onto {Sure (+1), Uncertain (0), Impossible (-1)}
+   with a Leminal Zone deadband.
+2. **SAEP Veto Layer** — checks the assignment against a 4-tier governance hierarchy
+   (Room → Sector → Portfolio → Market).
+3. **Symmetry-Skeptic** — flags solutions that break topological symmetry in the
+   constraint graph.
 """
 
 from __future__ import annotations
@@ -26,6 +36,9 @@ from savanty.dspy_modules import (
     SolutionVisualization,
 )
 from savanty.logging_config import logger
+from savanty.ternary_l import TernaryLEngine, TernaryLResult, TritGate, LeminalZone
+from savanty.saep_veto import VetoEngine, VetoResult, SAEPConstraint, SAEPTier
+from savanty.symmetry_skeptic import SymmetrySkeptic, SymmetrySkepticResult
 
 # LLM configuration (lazy initialization)
 _lm_instance = None
@@ -105,6 +118,11 @@ class ProblemSolverResult:
         repair_trace: list[dict] | None = None,
         repair_iters: int = 0,
         final_failure_type: str | None = None,
+        # ── Hybrid Manifold post-processing ─────────────────────────────────────
+        ternary_result: TernaryLResult | None = None,
+        veto_result: VetoResult | None = None,
+        symmetry_result: SymmetrySkepticResult | None = None,
+        topological_scores: dict[str, float] | None = None,
     ):
         self.needs_more_info = needs_more_info
         self.questions = questions or []
@@ -121,6 +139,11 @@ class ProblemSolverResult:
         self.repair_trace = repair_trace or []
         self.repair_iters = repair_iters
         self.final_failure_type = final_failure_type
+        # Hybrid Manifold post-processing
+        self.ternary_result = ternary_result
+        self.veto_result = veto_result
+        self.symmetry_result = symmetry_result
+        self.topological_scores = topological_scores or {}
 
 
 # --- ASP assembly + solving --------------------------------------------------------
@@ -358,6 +381,46 @@ def _repair(problem_description, components, outcome, repair_mode, decision_sche
     return _parse_components(pred.repaired_program_components), feedback
 
 
+def _post_process(
+    assignment: dict[str, str] | None,
+    domains: dict[str, list[str]] | None,
+    infeasible: bool,
+    constraint_edges: list[tuple[str, str]] | None,
+    saep_constraints: list[SAEPConstraint] | None,
+    leminal_zone: LeminalZone | None,
+) -> tuple[TernaryLResult | None, VetoResult | None, SymmetrySkepticResult | None, dict[str, float]]:
+    """Run the Hybrid Manifold post-processing layers.
+
+    Returns (ternary, veto, symmetry, scores_dict).
+    """
+    scores: dict[str, float] = {}
+
+    # 1. TernaryL Gate
+    ternary_engine = TernaryLEngine(leminal=leminal_zone)
+    ternary_result = ternary_engine.evaluate(
+        assignment=assignment, domains=domains, infeasible=infeasible
+    )
+    scores["ternary_aggregate_gate"] = float(ternary_result.aggregate_gate)
+    scores["ternary_aggregate_conviction"] = ternary_result.aggregate_conviction
+
+    # 2. SAEP Veto Layer
+    veto_engine = VetoEngine(constraints=saep_constraints or [])
+    veto_result = veto_engine.check(assignment=assignment)
+    scores["veto_passed"] = 1.0 if veto_result.passed else 0.0
+
+    # 3. Symmetry-Skeptic
+    skeptic = SymmetrySkeptic()
+    symmetry_result = skeptic.check(
+        assignment=assignment,
+        domains=domains,
+        constraint_edges=constraint_edges,
+    )
+    scores["symmetry_passed"] = 1.0 if symmetry_result.passed else 0.0
+    scores["symmetry_wasserstein"] = symmetry_result.wasserstein_distance
+
+    return ternary_result, veto_result, symmetry_result, scores
+
+
 def solve_optimization_problem(
     problem_description: str,
     additional_info: str = None,
@@ -366,6 +429,11 @@ def solve_optimization_problem(
     repair_mode: str = "typed_core",
     variables=None,
     domains=None,
+    # ── Hybrid Manifold options ────────────────────────────────────────────────
+    enable_topological_post: bool = True,
+    saep_constraints: list[SAEPConstraint] | None = None,
+    constraint_edges: list[tuple[str, str]] | None = None,
+    leminal_zone: LeminalZone | None = None,
 ) -> ProblemSolverResult:
     """Solve a problem from its description.
 
@@ -373,6 +441,12 @@ def solve_optimization_problem(
                  "generic" (Logic-LM-style — raw solver message only).
     variables/domains: optional decision-variable template (ids + allowed values) that the
                  generated assign/2 atoms must use; given identically to all baselines.
+
+    Hybrid Manifold (topological post-processing) options:
+    - enable_topological_post: run TernaryL, SAEP Veto, Symmetry-Skeptic after solving.
+    - saep_constraints: additional governance constraints for the SAEP Veto Layer.
+    - constraint_edges: variable pairs sharing a constraint (for symmetry detection).
+    - leminal_zone: custom LeminalZone deadband thresholds.
     """
     logger.info("Starting optimization problem solving")
     decision_schema = build_decision_schema(variables, domains)
@@ -416,6 +490,25 @@ def solve_optimization_problem(
 
         full_asp_code = outcome.asp_code
 
+        # ── Hybrid Manifold post-processing ────────────────────────────────────────
+        ternary_result: TernaryLResult | None = None
+        veto_result: VetoResult | None = None
+        symmetry_result: SymmetrySkepticResult | None = None
+        topological_scores: dict[str, float] = {}
+
+        if enable_topological_post:
+            assignment_for_post = (
+                outcome.assignment if outcome.failure_type == "ok" else None
+            )
+            ternary_result, veto_result, symmetry_result, topological_scores = _post_process(
+                assignment=assignment_for_post,
+                domains=domains,
+                infeasible=(outcome.failure_type == "unsat"),
+                constraint_edges=constraint_edges,
+                saep_constraints=saep_constraints,
+                leminal_zone=leminal_zone,
+            )
+
         if outcome.failure_type == "ok":
             solution_str = "; ".join(f"{k}={v}" for k, v in sorted(outcome.assignment.items()))
             logger.info(f"Solved with {len(outcome.assignment)} assignments (iters={iters})")
@@ -426,6 +519,10 @@ def solve_optimization_problem(
                 repair_trace=repair_trace,
                 repair_iters=iters,
                 final_failure_type="ok",
+                ternary_result=ternary_result,
+                veto_result=veto_result,
+                symmetry_result=symmetry_result,
+                topological_scores=topological_scores,
             )
 
         if outcome.failure_type == "unsat":
@@ -438,6 +535,10 @@ def solve_optimization_problem(
                 repair_trace=repair_trace,
                 repair_iters=iters,
                 final_failure_type="unsat",
+                ternary_result=ternary_result,
+                veto_result=veto_result,
+                symmetry_result=symmetry_result,
+                topological_scores=topological_scores,
             )
 
         # syntax_error / empty that repair did not fix.
@@ -448,6 +549,10 @@ def solve_optimization_problem(
             repair_trace=repair_trace,
             repair_iters=iters,
             final_failure_type=outcome.failure_type,
+            ternary_result=ternary_result,
+            veto_result=veto_result,
+            symmetry_result=symmetry_result,
+            topological_scores=topological_scores,
         )
 
     except ConfigurationError as e:
